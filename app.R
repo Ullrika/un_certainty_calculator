@@ -9,7 +9,7 @@
 # This work was done as part of RiskHunt3R (EU Horizon 2020 grant No 964537)
 # 
 
-https://github.com/Ullrika/un_certainty_calculator.git
+#https://github.com/Ullrika/un_certainty_calculator.git
 
 library(shiny)
 
