@@ -73,9 +73,19 @@ This page is under construction. We are currently working on making a user inter
 :::
 
 ```{r}
+# Risk manager input
+
 # practical certainty
 pc_yes = 0.8 # threshold for conclusive assessment about the positive outcome
 pc_no = 0.9 # threshold for conclusive assessment about the negative outcome
+
+## risk threshold - how many times smaller must the high exposure be compared to human dose for the chemical to be considered safe
+th = 1
+```
+
+
+```{r}
+## Tab ange antal värden (1, 3 eller fler än 3). 
 
 ## hazard
 pr_bmdl = 0.05 # probability left of lower limit
@@ -85,7 +95,10 @@ pr_bmdu = 0.95 # probability left of upper limit
 bmdl = 70 # lower limit
 bmd = 106 # mid value
 bmdu = 130 # upper limit
+```
 
+
+```{r}
 ## exposure
 pr_hel = 0.05 # probability left of lower limit
 pr_hem = 0.5 # probability left of mid limit
@@ -94,10 +107,10 @@ pr_heu = 0.95 # probability left of upper limit
 hel = 70 # lower limit
 hem = 100 # mid value
 heu = 120 # upper limit
+```
 
-## risk threshold
-th = 10
 
+```{r}
 ## uncertainty factors
 f_he = 1.2
 f_hd = 0.8
