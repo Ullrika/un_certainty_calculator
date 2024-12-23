@@ -6,6 +6,7 @@
 # Ullrika Sahlin (Lund University)
 # Contributors
 # Dawei Tang (Unilever)
+# Carl Troein (Lund University)
 # This work was done as part of RiskHunt3R (EU Horizon 2020 grant No 964537)
 # 
 
