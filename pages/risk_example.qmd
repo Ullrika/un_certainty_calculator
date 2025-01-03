@@ -104,9 +104,15 @@ pr_hel = 0.05 # probability left of lower limit
 pr_hem = 0.5 # probability left of mid limit
 pr_heu = 0.95 # probability left of upper limit
 
-hel = 70 # lower limit
-hem = 100 # mid value
-heu = 120 # upper limit
+## no health concern?
+hel = 20 # lower limit
+hem = 50 # mid value
+heu = 100 # upper limit
+
+## health concern
+heyl = 110 # lower limit
+heym = 150 # mid value
+heyu = 220 # upper limit
 ```
 
 
@@ -127,16 +133,23 @@ SHELF::plotfit(fit_hd,d="skewnormal",xlab="HD",ylab="probability density")
 ## Exposure
 fit_he = SHELF::fitdist(vals = c(hel,hem,heu),probs = c(pr_hel, pr_hem, pr_heu))
 SHELF::plotfit(fit_he,d="skewnormal",xlab="HE",ylab="probability density")
+fit_hey = SHELF::fitdist(vals = c(heyl,heym,heyu),probs = c(pr_hel, pr_hem, pr_heu))
 ```
 
 ```{r}
 # probability first (is done with respect to what we believe to be the more probable option, which is NO)
 #1-pc_no = 10% - divide both to 5 and 5
-p_lost_HD = 5 #calculated
+p_lost_HD = 5 #selected to be half of 10
+p_lost_HD_yes = 100 * (1 - pr_bmdu)
 y_pfirst =   bmdl#fit_hd$limits$lower + (fit_hd$limits$upper-fit_hd$limits$lower) * rbeta(n = niter, shape1 = fit_hd$Beta$shape1, shape2 = fit_hd $Beta$shape2) # elicited y given prob
+y_pfirst_yes = bmdu
 p_lost_HE = 100-100*pc_no-p_lost_HD # calculated to be 
+p_lost_HE_yes = 100-100*pc_yes-p_lost_HD_yes # calculated to be 
 ## PROVIDE INPUT
-x_pfirst = round(qlnorm(1-p_lost_HE/100,fit_he$Normal$mean,fit_he$Normal$sd),2) # elicited Pr(HE>x)=p_lost_HE
+#x_pfirst = round(qlnorm(1-p_lost_HE/100,fit_he$Normal$mean,fit_he$Normal$sd),2) # elicited Pr(HE>x)=p_lost_HE
+x_pfirst = round(qsn(1-p_lost_HE/100,fit_he$Skewnormal$location,fit_he$Skewnormal$scale,fit_he$Skewnormal$slant),2) # elicited Pr(HE>x)=p_lost_HE
+## with health concern:
+x_pfirst_yes = round(qsn(p_lost_HE_yes/100,fit_hey$Skewnormal$location,fit_hey$Skewnormal$scale,fit_hey$Skewnormal$slant),2) # elicited Pr(HE<x)=p_lost_HE_yes
 ```
 
 ```{r}
@@ -144,11 +157,17 @@ x_pfirst = round(qlnorm(1-p_lost_HE/100,fit_he$Normal$mean,fit_he$Normal$sd),2) 
 y_nfirst = bmdl
 p_HD = pr_bmdl*100 # probability for Pr(HD>y) 
 x_nfirst = y_nfirst*th
+
+y_nfirst_yes = bmdu
+p_HD_yes = pr_bmdu*100 # probability for Pr(HD>y) 
+x_nfirst_yes = y_nfirst_yes*th
 ```
 
 ```{r}
 # elicit probability
-p_HE = 100-round(100*plnorm(x_nfirst,fit_he$Normal$mean,fit_he$Normal$sd),1) #Pr(HE>x)
+#p_HE = 100-round(100*plnorm(x_nfirst,fit_he$Normal$mean,fit_he$Normal$sd),1) #Pr(HE>x)
+p_HE = 100-round(100*psn(x_nfirst,fit_he$Skewnormal$location,fit_he$Skewnormal$scale,fit_he$Skewnormal$slant),1) #Pr(HE>x)
+p_HE_yes = round(100*psn(x_nfirst_yes,fit_hey$Skewnormal$location,fit_hey$Skewnormal$scale,fit_hey$Skewnormal$slant),1) #Pr(HE<x)
 ```
 
 ## Hazard assessment
@@ -169,7 +188,7 @@ The quantity of interest for the exposure assessment is a High Exposure in the t
 
 Estimate of high exposure μg/kg bw per day for compound $X$ is
 
-| HEL     | HE      | HE      |
+| HEL     | HE      | HEU     |
 |---------|---------|---------|
 | `r hel` | `r hem` | `r heu` |
 
@@ -243,7 +262,7 @@ In our example, the expert agree that their (un)certainty lies in the inconclusi
 
 Is practical certainty obtained? No.
 
-We proceed by **refining** uncertainty
+We proceed by **refining** uncertainty.
 
 # Tier 2. Refined option with probability bounds
 
@@ -258,8 +277,9 @@ We explore how to do this with **probability bound analysis** where we offer two
 -   numbers first: to elicit probabilities given numerical values, where the numerical values are chosen so the risk ratio is 1.
 
 <!-- Also know as the *glorious formulas* -->
+We further divide this into two cases: case A where we assess if there is *no health concern* and case B where we assess if there is a *health concern*.
 
-## Probabilities first
+## Case A: Probabilities first, no health concern
 
 The refined option with probability bounds can be modified to consider practical certainty in the following way. In this example, the risk managers and the experts have agreed that experts must be at least `r 100*pc_no`% certain that a High Exposure **HE** is below the **HD** in order for risk managers to make a decision.
 
@@ -293,13 +313,13 @@ Practical certainty is not reached with the probability bounds analysis using pr
 
 <!-- Hence, practical certainty is reached. Proceed to the decision. -->
 
-## Numbers first
+## Case A: Numbers first, no health concern
 
 Use a conservative estimate for HD as starting point and use experts judgement on their uncertainty for that to guide what value to consider for the exposure part.
 
-Ask experts to judge their probability expressing their uncertainty about a conservative estimate of hazard, e.g. the BMDL,
+Ask experts to judge their probability expressing their uncertainty about a conservative estimate of hazard, e.g. the BMDL.
 
-The experts judge that they are `r p_HD`% certain that the Point of Departure (Human Dose) is below `r y_nfirst` μg $X$/kg bw per day.
+The experts judge that they are `r 100-p_HD`% certain that the Point of Departure (Human Dose) is above `r y_nfirst` μg $X$/kg bw per day.
 
 $$P(HD < y) = `r p_HD`\%$$ That implies that the conservative estimate for the hazard is $y = `r y_nfirst`$, which is the BMDL. Experts can adjust this downward or upward considering additional sources of uncertainty.
 
@@ -323,11 +343,12 @@ $$P( HE > x) = `r p_HE`\%$$
 |---------------|-------|-----------|
 | `r 100-p_HE`% | x     | `r p_HE`% |
 
-Practical certainty is obtained if $$100 - P(HE > x) - P(HD < y) \geq `r 100*pc_no`$$ In this example, the left hand side is $100-[`r p_HE`+`r p_HD`]=100-`r p_HE` - `r p_HD`= `r 100-(p_HE + p_HD)`$.
+Practical certainty is obtained if $$100 - \min(100, P(HE > x) + P(HD < y)) \geq `r 100*pc_no`$$ In this example, the left hand side is $100-min(100, `r p_HE`+`r p_HD`)= `r 100-min(100,p_HE + p_HD)`$.
 
-::: callout-note
-Note that probabilities cannot be negative. Here, the negative value is a result from using a simplified probabilistic where probabilities are added up.
-:::
+
+#::: callout-note
+#Note that probabilities cannot be negative. Here, the negative value is a result from using a simplified probabilistic where probabilities are added up.
+#:::
 
 Hence, practical certainty is not reached with the probability bounds analysis using numbers first.
 
@@ -336,6 +357,91 @@ If it is not possible to conclude with high enough certainty, we move on to a re
 ::: callout-note
 The numbers and probabilities are chosen for demonstration. There might be inconsistencies in the judgements between the "probability-first" and "numbers-first" approaches in this example. In reality, only one of the options are chosen.
 :::
+
+
+## Case B: Probabilities first, health concern
+
+When a compound has a higher probability to be a health concern, we use the same approaches to assess if it is *conclusively* a health concern.
+
+Consider a compound with a higher **HE** than used in case A:
+
+| HEL      | HE       | HEU      |
+|----------|----------|----------|
+| `r heyl` | `r heym` | `r heyu` |
+
+In this example, the risk managers and the experts have agreed that experts must be at least `r 100*pc_yes`% certain that a High Exposure **HE** is *above* the **HD** in order for risk managers to make a decision.
+
+This means that the assessment is conclusive when the experts are at least `r 100*pc_yes`% certain that the risk ratio is greater than one (*health concern*).
+
+Subtract the probability threshold for practical certainty from 100% to set an upper bound for the the sum of the lost probabilities.
+
+$$100\% - `r 100*pc_yes`\% = `r 100-100*pc_yes`\%$$
+
+Divide the resulting probability into two parts, one for the hazard, here $`r p_lost_HD_yes`\%$, and one for the exposure, what remains $100-`r 100*pc_yes` - `r p_lost_HD_yes` = `r p_lost_HE_yes`\%$.
+
+Elicit the ~~conservative~~ estimate of the Point of Departure (Human Dose) from the toxicology experts (asking them to consider the identified sources of uncertainty for the hazard assessment). Define the ~~conservative~~ estimate as the quantile $y$
+
+$$P(HD > y) = `r p_lost_HD_yes`\%$$
+
+Here the expert set $y = `r y_pfirst_yes`$, which is the BMDU. Experts can adjust this downward or upward considering additional sources of uncertainty.
+
+Elicit a ~~conservative~~ estimate of a High Exposure from the exposure experts (asking them to consider the identified sources of uncertainty for the exposure assessment, alternatively any additional sources of uncertainty not accounted for in a model based ~~conservative~~ estimate). Define the ~~conservative~~ estimate as the quantile $x$
+
+$$P(HE < x) = `r p_lost_HE_yes`\%$$
+
+In this example, the expert elicit the value $x = `r x_pfirst_yes`$.
+
+Divide the ~~conservative~~ estimate for the exposure with the ~~conservative~~ estimate for the hazard $\frac{x}{y}$.
+
+Practical certainty is obtained if $\frac{x}{y} > 1$.
+
+In this example, this ratio is $\frac{`r x_pfirst_yes`}{`r y_pfirst_yes`} = `r round(x_pfirst_yes/y_pfirst_yes,1)`$
+
+Practical certainty is not reached with the probability bounds analysis using probabilities first, so proceed with a refined approach.
+
+<!-- Hence, practical certainty is reached. Proceed to the decision. -->
+
+## Case B: Numbers first, health concern
+
+Use a ~~conservative~~ estimate for HD as starting point and use experts' judgement on their uncertainty for that to guide what value to consider for the exposure part.
+
+Ask experts to judge their probability expressing their uncertainty about a ~~conservative~~ estimate of hazard, e.g. the BMDU.
+
+The experts judge that they are `r p_HD_yes`% certain that the Point of Departure (Human Dose) is *below* `r y_nfirst_yes` μg $X$/kg bw per day.
+
+$$P(HD > y) = `r 100 - p_HD_yes`\%$$ That implies that the ~~conservative~~ estimate for the hazard is $y = `r y_nfirst_yes`$, which is the BMDU. Experts can adjust this downward or upward considering additional sources of uncertainty.
+
+| P below       | value | P above           |
+|---------------|-------|-------------------|
+| `r p_HD_yes`% | y     | `r 100-p_HD_yes`% |
+
+<!-- In some situations, the HD is the BMDL and then it is difficult to talk about uncertainty about the HD. If so, one can introduce an uncertainty factor (UF) that considers uncertainty associated with the hazard assessment. The focus is then on HD/UF instead of HD. -->
+
+Derive the value on the High Exposure where the risk ratio is at the critical threshold
+
+$$\frac{x}{y} = `r th`$$
+
+This value is $x = `r th` \cdot y = `r th*y_nfirst_yes`$
+
+Ask the experts to judge their probability that a High Exposure is above `r th*y_nfirst_yes` μg $X$/kg bw per day. The experts' elicited probability is `r 100-p_HE_yes`%.
+
+$$P( HE < x) = `r p_HE_yes`\%$$
+
+| P below       | value | P above           |
+|---------------|-------|-------------------|
+| `r p_HE_yes`% | x     | `r 100-p_HE_yes`% |
+
+Practical certainty is obtained if $$100 - \min(100, P(HE < x) + P(HD > y)) \geq `r 100*pc_yes`$$ In this example, the left hand side is $100-min(100, `r p_HE_yes`+`r 100-p_HD_yes`)= `r 100-min(100,p_HE_yes + 100-p_HD_yes)`$.
+
+
+Hence, practical certainty is not reached with the probability bounds analysis using numbers first.
+
+If it is not possible to conclude with high enough certainty, we move on to a refined option for uncertainty analysis with probability distributions or consider reducing uncertainty by collecting more data.
+
+::: callout-note
+The numbers and probabilities are chosen for demonstration. There might be inconsistencies in the judgements between the "probability-first" and "numbers-first" approaches in this example. In reality, only one of the options is chosen.
+:::
+
 
 # Tier 3. Refined option with probability distributions
 
@@ -351,7 +457,7 @@ Note that an explicit elicitation of the outcome of interest following a Monte C
 
 ### Human Dose
 
-A probability distribution representing uncertainty in the **Human Dose** can be taken from the BMD uncertainty distribution generated by bootstrapping or Bayesian modelling. There are plenty of BMD software available to do this.
+A probability distribution representing uncertainty in the **Human Dose** can be taken from the BMD uncertainty distribution generated by bootstrapping or Bayesian modelling. There are plenty of BMD software packages available to do this.
 
 We (the assessors) let the BMDL, the BMD, and the BMDU define a lower percentile (`r pr_bmdl`), the median (`r pr_bmd`), and a higher percentile (`r pr_bmdu`) of the probability distribution for uncertainty in the **HD**.
 
