@@ -13,6 +13,7 @@
 #https://github.com/Ullrika/un_certainty_calculator.git
 
 library(shiny)
+# library(shinyjs)
 
 # Define UI for application that draws a histogram
 # ui <- fluidPage(

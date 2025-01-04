@@ -1,10 +1,13 @@
+library(shinyjs)
+
 fluidPage(
-  
+  useShinyjs(),
   # Application title
   titlePanel("The (un)certainty calculator"),
   
   navlistPanel(
     "Menu",
+    widths = c(3, 9),
     tabPanel(
       "Practical certainty",
       
@@ -21,6 +24,11 @@ fluidPage(
       
       sidebarLayout(
         sidebarPanel(
+          width = 5,
+          radioButtons(
+            "concern_yn", label = "Hypothesis",
+            choices = list("No health concern" = 1, "Health concern" = 2),
+            selected = 1),
           sliderInput("hd",
                       "Point of departure (Human Dose)",
                       min = 1,
@@ -31,23 +39,29 @@ fluidPage(
                       min = 1,
                       max = 25,
                       value = 5),
-          hr(),
-          textInput("he_pr",
-                    "P(HE > x)"),
-          # sliderInput("he_pr",
-          #             "P(HE > x)",
-          #             min = 1,
-          #             max = 25,
-          #             value = 5),
-          sliderInput("he",
-                      "High Exposure",
-                      min = 1,
-                      max = 200,
-                      value = 100)
+
+          radioButtons(
+            "method", label = "Method",
+            choices = list("Probabilities first" = 1, "Numbers first" = 2),
+            selected = 1),
+          
+          disabled(
+            sliderInput("he_pr",
+                        "P(HE > x)",
+                        min = 1,
+                        max = 50,
+                        value = 5)),
+          disabled(
+            sliderInput("he",
+                        "High Exposure",
+                        min = 1,
+                        max = 200,
+                        value = 100))
         ),
         
         # Show a plot of the generated distribution
         mainPanel(
+          width = 7,
           uiOutput("t2results")
         )
       )
