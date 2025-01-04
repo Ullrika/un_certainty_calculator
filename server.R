@@ -30,52 +30,88 @@ function(input, output) {
   # })
   
   observe({
-    conc = input$concern_yn
-    lost = if(conc == 1) input$pc[1] else 100 - input$pc[2]
-    updateSliderInput(inputId="hd_pr",
-                      max=lost-1,
-                      label=if(conc == 1) "P(HD < y)" else "P(HD > y)")
+    nhc = input$concern_yn == 1
+    lost = if(nhc) input$pc[1] else 100 - input$pc[2]
+    label = if(nhc) "P(HD < y)" else "P(HD > y)"
+    updateSliderInput(
+      inputId = "hd_pr",
+      max = lost - 1,
+      label = label)
+  })
+
+  observe({
+    nhc = input$concern_yn == 1
+    updateSliderInput(
+      inputId="he_pr", 
+      label=if(nhc) "P(HE > x)" else "P(HE < x)")
+  })
+
+  observe({
     if(input$method == 1) {
-      he_pr = lost - input$hd_pr
-      updateSliderInput(inputId="he_pr", value=he_pr,
-                        max=lost-1,
-                        label=if(conc == 1) "P(HE > x)" else "P(HE < x)")
-    } else {
-      updateSliderInput(inputId="he_pr", max=50,
-                        label=if(conc == 1) "P(HE > x)" else "P(HE < x)")
-      updateSliderInput(inputId="he", value=input$hd)
+      shinyjs::hide("he_pr")
+      shinyjs::show("he")
+    }else{
+      shinyjs::hide("he")
+      shinyjs::show("he_pr")
     }
   })
   
   observe({
-    meth = input$method
-    shinyjs::disable(if(meth == 1) "he_pr" else "he")
-    shinyjs::enable(if(meth == 1) "he" else "he_pr")
+    nhc = input$concern_yn == 1
+    lost = if(nhc) input$pc[1] else 100 - input$pc[2]
+    if(input$method == 1) {
+      he_pr = lost - input$hd_pr
+      est = if(nhc) "conservative" else "liberal"
+      sgn = if(nhc) ">" else "<"
+      output$he_text <- renderText({ sprintf(paste(
+        "Elicit a %s estimate of a High Exposure as the quantile",
+        " <i>x</i> such that <i>P</i>(HE %s <i>x</i>) = %g%%.<p>"),
+        est, sgn, he_pr)})
+    } else {
+      updateSliderInput(inputId="he", value=input$hd)
+      sgn = if(nhc) "above" else "below"
+      output$he_text <- renderText({ sprintf(paste(
+        "Ask the experts to judge their probability that a High Exposure is",
+        " %s <i>x</i> = %g μg/kg bw per day.<p>"),
+        sgn, input$hd)})
+    }
   })
   
   output$t2results <- renderUI({
-    if(input$method[1] == 1) {
-      rat = input$hd[1] / input$he[1]
-      conc = input$concern_yn == 1
-      isc = if(conc) "is not" else "is"
-      sgn = if(conc) ">" else "<"
-      reached = if(conc) rat > 1 else rat < 1
-      withMathJax(paste(
-        sprintf("Practical certainty is obtained if $$\\frac{x}{y} %s 1$$",
-                sgn),
-        sprintf("With these numbers, the ratio is $$\\frac{%g}{%g} = %.2f$$",
-                      input$hd[1], input$he[1], input$hd[1] / input$he[1]),
-        if(reached) sprintf(
-          "Practical certainty is reached. The compound %s a health concern.",
-          toupper(isc)) else sprintf(paste(
-            "Practical certainty is not reached with the probability bounds",
-            " analysis using probabilities first, so proceed with a refined",
-            " approach to determine if the compound %s a health concern."),
-          isc)
+    nhc = input$concern_yn == 1
+
+    list(
+      if(input$method == 1) {
+        ratio = input$hd / input$he
+        reached = nhc == (ratio > 1)
+        withMathJax(paste(
+          sprintf("Practical certainty is obtained if $$\\frac{x}{y} %s 1$$",
+                  {if(nhc) ">" else "<"}),
+          sprintf("With these numbers, the ratio is $$\\frac{%g}{%g} = %.2f$$",
+                  input$hd, input$he, ratio)
         ))
-    } else {
+      } else {
+        lhs = 100 - min(100, input$hd_pr + input$he_pr)
+        notlost = if(nhc) 100 - input$pc[1] else input$pc[2]
+        reached = lhs >= notlost
+        withMathJax(paste(
+          "Practical certainty is obtained if ",
+          sprintf("$$100 - \\min(100, P(HE %s x) + P(HD %s y)) \\geq %g$$",
+                  {if(nhc) ">" else "<"}, {if(nhc) "<" else ">"}, notlost),
+          "With these numbers, the left hand side is ",
+          sprintf("$$100 - \\min(100, %g + %g) = %g$$",
+                  input$hd_pr, input$he_pr, lhs)
+        ))},
       
-    }
+      {if(reached) sprintf(
+        "Practical certainty is reached. The compound %s a health concern.",
+        {if(nhc) "IS NOT" else "IS"}
+      ) else sprintf(paste(
+        "Practical certainty is not reached with the probability bounds",
+        " analysis using probabilities first, so proceed with a refined",
+        " approach to determine if the compound %s a health concern."),
+        {if(nhc) "is not" else "is"})}
+    )
   })
 }
 

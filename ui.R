@@ -38,25 +38,27 @@ fluidPage(
                       "P(HD < y)",
                       min = 1,
                       max = 25,
-                      value = 5),
+                      value = 5,
+                      post="%"),
 
+          helpText("dingo"),
           radioButtons(
             "method", label = "Method",
             choices = list("Probabilities first" = 1, "Numbers first" = 2),
             selected = 1),
           
-          disabled(
-            sliderInput("he_pr",
-                        "P(HE > x)",
-                        min = 1,
-                        max = 50,
-                        value = 5)),
-          disabled(
-            sliderInput("he",
-                        "High Exposure",
-                        min = 1,
-                        max = 200,
-                        value = 100))
+          htmlOutput("he_text"),
+          sliderInput("he_pr",
+                      "P(HE > x)",
+                      min = 1,
+                      max = 50,
+                      value = 5,
+                      post="%"),
+          sliderInput("he",
+                      "High Exposure",
+                      min = 1,
+                      max = 200,
+                      value = 100)
         ),
         
         # Show a plot of the generated distribution
