@@ -435,19 +435,7 @@ Note
 </tbody>
 </table>
 <p>Practical certainty is obtained if <span class="math display">\[100 - \min(100, P(HE &gt; x) + P(HD &lt; y)) \geq 90\]</span> In this example, the left hand side is <span class="math inline">\(100-min(100, 23.5+5)= 71.5\)</span>.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Note that probabilities cannot be negative. Here, the negative value is a result from using a simplified probabilistic where probabilities are added up.</p>
-</div>
-</div>
+<p>#::: callout-note #Note that probabilities cannot be negative. Here, the negative value is a result from using a simplified probabilistic where probabilities are added up. #:::</p>
 <p>Hence, practical certainty is not reached with the probability bounds analysis using numbers first.</p>
 <p>If it is not possible to conclude with high enough certainty, we move on to a refined option for uncertainty analysis with probability distributions or consider reducing uncertainty by collecting more data.</p>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -467,8 +455,6 @@ Note
 <section id="case-b-probabilities-first-health-concern" class="level2">
 <h2 class="anchored" data-anchor-id="case-b-probabilities-first-health-concern">Case B: Probabilities first, health concern</h2>
 <p>When a compound has a higher probability to be a health concern, we use the same approaches to assess if it is <em>conclusively</em> a health concern.</p>
-<p>In this example, the risk managers and the experts have agreed that experts must be at least 80% certain that a High Exposure <strong>HE</strong> is <em>above</em> the <strong>HD</strong> in order for risk managers to make a decision.</p>
-<p>This means that the assessment is conclusive when the experts are at least 80% certain that the risk ratio is greater than one (<em>health concern</em>).</p>
 <p>Consider a compound with a higher <strong>HE</strong> than used in case A:</p>
 <table class="caption-top table">
 <thead>
@@ -486,6 +472,8 @@ Note
 </tr>
 </tbody>
 </table>
+<p>In this example, the risk managers and the experts have agreed that experts must be at least 80% certain that a High Exposure <strong>HE</strong> is <em>above</em> the <strong>HD</strong> in order for risk managers to make a decision.</p>
+<p>This means that the assessment is conclusive when the experts are at least 80% certain that the risk ratio is greater than one (<em>health concern</em>).</p>
 <p>Subtract the probability threshold for practical certainty from 100% to set an upper bound for the the sum of the lost probabilities.</p>
 <p><span class="math display">\[100\% - 80\% = 20\%\]</span></p>
 <p>Divide the resulting probability into two parts, one for the hazard, here <span class="math inline">\(5\%\)</span>, and one for the exposure, what remains <span class="math inline">\(100-80 - 5 = 15\%\)</span>.</p>
@@ -546,19 +534,6 @@ Note
 </tbody>
 </table>
 <p>Practical certainty is obtained if <span class="math display">\[100 - \min(100, P(HE &lt; x) + P(HD &gt; y)) \geq 80\]</span> In this example, the left hand side is <span class="math inline">\(100-min(100, 24.8+5)= 70.2\)</span>.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Note that probabilities cannot be negative. Here, the negative value is a result from using a simplified probabilistic where probabilities are added up.</p>
-</div>
-</div>
 <p>Hence, practical certainty is not reached with the probability bounds analysis using numbers first.</p>
 <p>If it is not possible to conclude with high enough certainty, we move on to a refined option for uncertainty analysis with probability distributions or consider reducing uncertainty by collecting more data.</p>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -571,7 +546,7 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The numbers and probabilities are chosen for demonstration. There might be inconsistencies in the judgements between the “probability-first” and “numbers-first” approaches in this example. In reality, only one of the options are chosen.</p>
+<p>The numbers and probabilities are chosen for demonstration. There might be inconsistencies in the judgements between the “probability-first” and “numbers-first” approaches in this example. In reality, only one of the options is chosen.</p>
 </div>
 </div>
 </section>
@@ -596,7 +571,7 @@ Note
 </div>
 <section id="human-dose" class="level3">
 <h3 class="anchored" data-anchor-id="human-dose">Human Dose</h3>
-<p>A probability distribution representing uncertainty in the <strong>Human Dose</strong> can be taken from the BMD uncertainty distribution generated by bootstrapping or Bayesian modelling. There are plenty of BMD software available to do this.</p>
+<p>A probability distribution representing uncertainty in the <strong>Human Dose</strong> can be taken from the BMD uncertainty distribution generated by bootstrapping or Bayesian modelling. There are plenty of BMD software packages available to do this.</p>
 <p>We (the assessors) let the BMDL, the BMD, and the BMDU define a lower percentile (0.05), the median (0.5), and a higher percentile (0.95) of the probability distribution for uncertainty in the <strong>HD</strong>.</p>
 <table class="caption-top table">
 <thead>
@@ -762,7 +737,7 @@ Warning
 </div>
 </div>
 </div>
-<p>Here the expert judge that their % certainty for no health concern is 74%.</p>
+<p>Here the expert judge that their % certainty for no health concern is 75%.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>

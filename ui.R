@@ -1,4 +1,5 @@
 library(shinyjs)
+library(DT)
 
 fluidPage(
   useShinyjs(),
@@ -7,7 +8,7 @@ fluidPage(
   
   navlistPanel(
     "Menu",
-    widths = c(3, 9),
+    widths = c(2, 7),
     tabPanel(
       "Practical certainty",
       
@@ -68,6 +69,49 @@ fluidPage(
         )
       )
     ),
+
+    tabPanel(
+      "Tier 3",
+
+      sidebarLayout(
+        sidebarPanel(
+          width = 6,
+          selectInput(
+            "hd_points", label = "# of HD percentiles",
+            choices = list("min/max" = 2, "min/med/max" = 3,
+                           "4 points" = 4, "5 points" = 5),
+            selected = 3),
+
+          DTOutput("hd_table"),
+
+          selectInput(
+            "hd_dist", label = "HD distribution",
+            choices = list("Normal" = "normal", "Log normal" = "lognormal",
+                          "Skew normal"="skewnormal"),
+            selected = "lognormal"),
+          
+          selectInput(
+            "he_points", label = "# of HE percentiles",
+            choices = list("min/max" = 2, "min/med/max" = 3),
+            selected = 3),
+          
+          DTOutput("he_table"),
+
+          selectInput(
+            "he_dist", label = "HE distribution",
+            choices = list("Normal" = "normal", "Log normal" = "lognormal",
+                          "Skew normal"="skewnormal"),
+            selected = "lognormal")
+        ),
+        
+        # Show a plot of the generated distribution
+        mainPanel(
+          width = 6,
+          plotOutput("t3plot")
+        )
+      )
+    ),
+      
     tabPanel(
       "Example",
       
