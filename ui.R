@@ -8,7 +8,7 @@ fluidPage(
   
   navlistPanel(
     "Menu",
-    widths = c(2, 7),
+    widths = c(2, 10),
     tabPanel(
       "Practical certainty",
       
@@ -21,15 +21,33 @@ fluidPage(
     ),
     
     tabPanel(
+      "Units",
+      
+      verticalLayout(
+        sliderInput(
+          "pddddc", label = h3("Flopopp"), min = 0, max = 100, 
+          value = c(10, 80), post="%"),
+        tableOutput("ddpctable")
+      )
+    ),
+    
+    tabPanel(
       "Tier 2",
       
       sidebarLayout(
         sidebarPanel(
-          width = 5,
+          width = 4,
           radioButtons(
-            "concern_yn", label = "Hypothesis",
+            "concern_yn", label = "Tentative conclusion",
             choices = list("No health concern" = 1, "Health concern" = 2),
             selected = 1),
+
+          radioButtons(
+            "method", label = "Method",
+            choices = list("Probabilities first" = 1, "Numbers first" = 2),
+            selected = 1),
+          
+          htmlOutput("hd_text"),
           sliderInput("hd",
                       "Point of departure (Human Dose)",
                       min = 1,
@@ -42,12 +60,6 @@ fluidPage(
                       value = 5,
                       post="%"),
 
-          helpText("dingo"),
-          radioButtons(
-            "method", label = "Method",
-            choices = list("Probabilities first" = 1, "Numbers first" = 2),
-            selected = 1),
-          
           htmlOutput("he_text"),
           sliderInput("he_pr",
                       "P(HE > x)",
@@ -64,7 +76,7 @@ fluidPage(
         
         # Show a plot of the generated distribution
         mainPanel(
-          width = 7,
+          width = 6,
           uiOutput("t2results")
         )
       )
@@ -75,32 +87,34 @@ fluidPage(
 
       sidebarLayout(
         sidebarPanel(
-          width = 6,
+          width = 4,
           selectInput(
             "hd_points", label = "# of HD percentiles",
-            choices = list("min/max" = 2, "min/med/max" = 3,
+            choices = list("2 points" = 2, "3 points" = 3,
                            "4 points" = 4, "5 points" = 5),
             selected = 3),
 
           DTOutput("hd_table"),
+          shinyjs::hidden(textOutput("hd_error")),
 
           selectInput(
             "hd_dist", label = "HD distribution",
-            choices = list("Normal" = "normal", "Log normal" = "lognormal",
-                          "Skew normal"="skewnormal"),
+            choices = list("Normal" = "normal", "Log-normal" = "lognormal",
+                          "Skew-normal"="skewnormal"),
             selected = "lognormal"),
           
           selectInput(
             "he_points", label = "# of HE percentiles",
-            choices = list("min/max" = 2, "min/med/max" = 3),
+            choices = list("2 points" = 2, "3 points" = 3,
+                           "4 points" = 4, "5 points" = 5),
             selected = 3),
           
           DTOutput("he_table"),
 
           selectInput(
             "he_dist", label = "HE distribution",
-            choices = list("Normal" = "normal", "Log normal" = "lognormal",
-                          "Skew normal"="skewnormal"),
+            choices = list("Normal" = "normal", "Log-normal" = "lognormal",
+                          "Skew-normal"="skewnormal"),
             selected = "lognormal")
         ),
         
