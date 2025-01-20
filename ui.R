@@ -32,6 +32,11 @@ fluidPage(
     ),
     
     tabPanel(
+      "Tier 1",
+      htmlOutput("t1_text"),
+    ),
+    
+    tabPanel(
       "Tier 2",
       
       sidebarLayout(
