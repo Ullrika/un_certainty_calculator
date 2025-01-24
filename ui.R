@@ -24,16 +24,30 @@ fluidPage(
       "Units",
       
       verticalLayout(
-        sliderInput(
-          "pddddc", label = h3("Flopopp"), min = 0, max = 100, 
-          value = c(10, 80), post="%"),
-        tableOutput("ddpctable")
+        textInput(
+          "units", label = "Units of measurement", value = "µg / kg bw"),
+        splitLayout(
+          numericInput(
+            "hdRangeMin", label = "Human Dose low limit", min = 1,
+            max = 100000, step = 1, value = 10),
+          numericInput(
+            "hdRangeMax", label = "high limit", min = 10,
+            max = 1000000, step = 1, value = 200)
+        ),
+        splitLayout(
+          numericInput(
+            "heRangeMin", label = "High Exposure low limit", min = 1,
+            max = 100000, step = 1, value = 10),
+          numericInput(
+            "heRangeMax", label = "high limit", min = 10,
+            max = 1000000, step = 1, value = 200)
+        )
       )
     ),
     
     tabPanel(
       "Tier 1",
-      htmlOutput("t1_text"),
+      htmlOutput("t1text"),
     ),
     
     tabPanel(
@@ -41,7 +55,7 @@ fluidPage(
       
       sidebarLayout(
         sidebarPanel(
-          width = 4,
+          width = 5,
           radioButtons(
             "concern_yn", label = "Tentative conclusion",
             choices = list("No health concern" = 1, "Health concern" = 2),
@@ -81,7 +95,7 @@ fluidPage(
         
         # Show a plot of the generated distribution
         mainPanel(
-          width = 6,
+          width = 5,
           uiOutput("t2results")
         )
       )
@@ -126,33 +140,12 @@ fluidPage(
         # Show a plot of the generated distribution
         mainPanel(
           width = 6,
-          plotOutput("t3plot")
-        )
-      )
-    ),
-      
-    tabPanel(
-      "Example",
-      
-      # Sidebar with slider input for thresholds for practical certainty
-      
-      
-      # Sidebar with a slider input for quantiles 
-      sidebarLayout(
-        sidebarPanel(
-          sliderInput("bins",
-                      "Number of bins:",
-                      min = 1,
-                      max = 50,
-                      value = 30)
-        ),
-        
-        # Show a plot of the generated distribution
-        mainPanel(
-          plotOutput("distPlot")
+          plotOutput("t3plot"),
+          htmlOutput("t3text")
         )
       )
     )
+
   )
 )
 

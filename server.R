@@ -3,51 +3,60 @@ library(SHELF)
 library(ggplot2)
 
 function(input, output) {
-  
-  output$distPlot <- renderPlot({
-    # generate bins based on input$bins from ui.R
-    x    <- faithful[, 2]
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = 'darkgray', border = 'white',
-         xlab = 'Waiting time to next eruption (in mins)',
-         main = 'Histogram of waiting times')
+
+  # Units
+  observe(if(input$hdRangeMin >= input$hdRangeMax) {
+    showNotification("HD lower limit must be < upper limit", type="error")
+  }else{
+    updateSliderInput(inputId="hd", min=input$hdRangeMin,
+                      max=input$hdRangeMax)
+  })
+  observe(if(input$heRangeMin >= input$heRangeMax) {
+    showNotification("HE lower limit must be < upper limit", type="error")
+  }else{
+    updateSliderInput(inputId="he", min=input$heRangeMin,
+                      max=input$heRangeMax)
   })
   
   
+  # Tier 1
+
+  output$t1text <- renderUI(list(
+    withMathJax(paste(
+    "Ask the experts to agree how certain they are as a group that",
+    "\\(\\frac{HE}{HD} < 1\\)",
+    "considering all evidence and all identified (non-standard or ",
+    "standard) sources of uncertainty.")),
+    HTML(paste("<p style='margin-top: 1em'>If the experts are at least",
+    sprintf("%d%% certain of this,", 100 - input$pc[1]),
+    "practical certainty is obtained."))
+    ))
+  
+  # Tier 2
+  
   output$pctable <- renderTable({
     fr<-data.frame(
-      a = sprintf("%g", input$pc[1]),
-      b = sprintf("%g-%g", input$pc[1], input$pc[2]),
-      c = sprintf("%g", input$pc[2]))
-    colnames(fr) <- c("No health concern",
-                      "Uncertainty",
-                      "Health concern")
+      a = c(sprintf("%g", input$pc[1]), sprintf("%g", 100-input$pc[1])),
+      b = c(sprintf("%g – %g", input$pc[1], input$pc[2]),
+            sprintf("%g – %g", 100-input$pc[2], 100-input$pc[1])),
+      c = c(sprintf("%g", input$pc[2]), sprintf("%g", 100-input$pc[2])))
+    colnames(fr) <- c("No health concern", "Uncertainty", "Health concern")
     fr},
     spacing="m"
   )
   
-  # observe({
-  #   updateTextInput(
-  #     inputId="he_pr", value=sprintf("%g", input$pc[1] - input$hd_pr[1]))
-  # })
-  
   observe({
     nhc = input$concern_yn == 1
     lost = if(nhc) input$pc[1] else 100 - input$pc[2]
-    label = if(nhc) "P(HD < y)" else "P(HD > y)"
-    updateSliderInput(
-      inputId = "hd_pr",
-      max = lost - 1,
-      label = label)
+    label = sprintf("P(HD %s %g)", (if(nhc) "<" else ">"), input$hd)
+    # label = if(nhc) "P(HD < y)" else "P(HD > y)"
+    updateSliderInput(inputId = "hd_pr", max = lost - 1, label = label)
   })
 
   observe({
     nhc = input$concern_yn == 1
-    updateSliderInput(
-      inputId="he_pr", 
-      label=if(nhc) "P(HE > x)" else "P(HE < x)")
+    label = sprintf("P(HE %s %g)", (if(nhc) ">" else "<"), input$hd)
+    updateSliderInput(inputId="he_pr", label = label)
   })
 
   observe({
@@ -63,21 +72,28 @@ function(input, output) {
   observe({
     nhc = input$concern_yn == 1
     lost = if(nhc) input$pc[1] else 100 - input$pc[2]
+    est = if(nhc) "conservative" else "best-case"
+    hdsgn = if(nhc) "<" else ">"
+    output$hd_text <- renderText({ sprintf(paste(
+      "Elicit a %s estimate of a Humans Dose as a quantile",
+      "<i>y</i> and the associated confidence ",
+      "<span style='white-space:nowrap'><i>P</i>(HD %s <i>y</i>).</span><p>"),
+      est, hdsgn)})
     if(input$method == 1) {
       he_pr = lost - input$hd_pr
-      est = if(nhc) "conservative" else "liberal"
-      sgn = if(nhc) ">" else "<"
+      hesgn = if(nhc) ">" else "<"
       output$he_text <- renderText({ sprintf(paste(
         "Elicit a %s estimate of a High Exposure as the quantile",
-        "<i>x</i> such that <i>P</i>(HE %s <i>x</i>) = %g%%.<p>"),
-        est, sgn, he_pr)})
+        "<i>x</i> such that <span style='white-space:nowrap'>",
+        "<i>P</i>(HE %s <i>x</i>) = %g%%.</span><p>"),
+        est, hesgn, he_pr)})
     } else {
       updateSliderInput(inputId="he", value=input$hd)
       sgn = if(nhc) "above" else "below"
       output$he_text <- renderText({ sprintf(paste(
         "Ask the experts to judge their probability that a High Exposure is",
-        "%s <i>x</i> = %g μg/kg bw per day.<p>"),
-        sgn, input$hd)})
+        "%s <i>x</i> = %g %s per day.<p>"),
+        sgn, input$hd, input$units)})
     }
   })
   
@@ -88,34 +104,39 @@ function(input, output) {
       if(input$method == 1) {
         ratio = input$hd / input$he
         reached = nhc == (ratio > 1)
-        withMathJax(paste(
-          sprintf("Practical certainty is obtained if $$\\frac{x}{y} %s 1$$",
-                  {if(nhc) ">" else "<"}),
-          sprintf("With these numbers, the ratio is $$\\frac{%g}{%g} = %.2f$$",
-                  input$hd, input$he, ratio)
-        ))
+        lhs = if(nhc) 100 - input$pc[1] else input$pc[2]
+        withMathJax(HTML(paste(
+          sprintf(
+            "Practical certainty is obtained if \\(\\frac{y}{x} %s 1\\).",
+            {if(nhc) ">" else "<"}),
+          sprintf(
+            "<br>With these numbers, the ratio is \\(\\frac{%g}{%g} = %.2f\\).",
+            input$hd, input$he, ratio)
+        )))
       } else {
         lhs = 100 - min(100, input$hd_pr + input$he_pr)
         notlost = if(nhc) 100 - input$pc[1] else input$pc[2]
         reached = lhs >= notlost
-        withMathJax(paste(
+        withMathJax(HTML(paste(
           "Practical certainty is obtained if ",
-          sprintf("$$100 - \\min(100, P(HE %s x) + P(HD %s y)) \\geq %g$$",
-                  {if(nhc) ">" else "<"}, {if(nhc) "<" else ">"}, notlost),
-          "With these numbers, the left hand side is ",
-          sprintf("$$100 - \\min(100, %g + %g) = %g$$",
+          sprintf("\\(100 - \\min(100, P(HD %s y) + P(HE %s x)) \\geq %g\\).",
+                  {if(nhc) "<" else ">"}, {if(nhc) ">" else "<"}, notlost),
+          "<br>With these numbers, the left hand side is ",
+          sprintf("\\(100 - \\min(100, %g + %g) = %g\\).",
                   input$hd_pr, input$he_pr, lhs)
-        ))},
+        )))},
       
-      {if(reached) sprintf(paste(
-        "Practical certainty is reached. The experts are at least %d certain",
-        "that the compound %s a health concern."), lhs,
+      HTML("<p style='margin-top: 1em'>"),
+
+      if(reached) sprintf(paste(
+        "Practical certainty is reached. The experts are at least %d %%",
+        "certain that the compound %s a health concern."), lhs,
         {if(nhc) "is not" else "is"}
       ) else sprintf(paste(
         "Practical certainty is not reached. The assessment is inconclusive.",
         "Proceed with a refined approach to determine if the compound %s ",
         "a health concern."),
-        {if(nhc) "is not" else "is"})}
+        {if(nhc) "is not" else "is"})
     )
   })
 
@@ -240,23 +261,30 @@ function(input, output) {
     (sum(overlap1) + sum(overlap2)) * .5 * step
   }
 
+  output$t3text <- renderUI({
+    prob <- t3compute() * 100
+    reached = 
+    if(prob <= input$pc[1] || prob >= input$pc[2]) {
+      nhc = (prob <= input$pc[1])
+      sprintf(paste(
+        "Practical certainty is reached. The experts are at least %.2g %%",
+        "certain that the compound %s a health concern."),
+        {if(nhc) 100 - prob else prob},
+        {if(nhc) "is not" else "is"} )
+    } else {
+      sprintf(paste(
+        "Practical certainty is not reached. The assessment is inconclusive.",
+        "Proceed with a refined approach to determine if the compound is",
+        "a health concern."))
+    }
+  })
+  
   output$t3plot <- renderPlot({
     pskip = 1e-4
     minq = min(qhd(pskip), qhe(pskip))
     maxq = max(qhd(1 - pskip), qhe(1 - pskip))
     x = seq(minq, maxq, len=100)
 
-    # integrate(t3f, minq, maxq, subdivisions=1e4)
-    
-    # SHELF::plotfit(
-    #   rv$fit_hd, d=input$hd_dist, xlab="HD", ylab="Probability density",
-    #   returnPlot=TRUE, showPlot=FALSE)
-    # SHELF::plotfit(
-    #   rv$fit_he, d=input$he_dist, xlab="HE", ylab="Probability density",
-    #   returnPlot=TRUE, showPlot=FALSE)
-
-    print(sprintf("Safe?  %.3g", t3compute()))
-    print(sprintf("Unsafe?  %.3g", t3compute(reverse=TRUE)))
     overlap1 = dhd(x) * (1 - phe(x))
     overlap2 = dhe(x) * phd(x)
     pldata = data.frame(val=rep(x, 2), density=c(dhd(x), dhe(x)),
