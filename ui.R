@@ -113,8 +113,9 @@ fluidPage(
                            "4 points" = 4, "5 points" = 5),
             selected = 3),
 
+          # uiOutput("hd_list"),
           DTOutput("hd_table"),
-          shinyjs::hidden(textOutput("hd_error")),
+          # shinyjs::hidden(textOutput("hd_error")),
 
           selectInput(
             "hd_dist", label = "HD distribution",
@@ -140,7 +141,7 @@ fluidPage(
         # Show a plot of the generated distribution
         mainPanel(
           width = 6,
-          plotOutput("t3plot"),
+          hidden(plotOutput("t3plot")),
           htmlOutput("t3text")
         )
       )

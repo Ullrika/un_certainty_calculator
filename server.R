@@ -29,8 +29,9 @@ function(input, output) {
     "standard) sources of uncertainty.")),
     HTML(paste("<p style='margin-top: 1em'>If the experts are at least",
     sprintf("%d%% certain of this,", 100 - input$pc[1]),
-    "practical certainty is obtained."))
-    ))
+    "we have obtained practical certainty that the compound is not a",
+    "health concern."))
+  ))
   
   # Tier 2
   
@@ -129,7 +130,7 @@ function(input, output) {
       HTML("<p style='margin-top: 1em'>"),
 
       if(reached) sprintf(paste(
-        "Practical certainty is reached. The experts are at least %d %%",
+        "Practical certainty is reached. The experts are at least %d%%",
         "certain that the compound %s a health concern."), lhs,
         {if(nhc) "is not" else "is"}
       ) else sprintf(paste(
@@ -267,7 +268,7 @@ function(input, output) {
     if(prob <= input$pc[1] || prob >= input$pc[2]) {
       nhc = (prob <= input$pc[1])
       sprintf(paste(
-        "Practical certainty is reached. The experts are at least %.2g %%",
+        "Practical certainty is reached. The experts are at least %.2g%%",
         "certain that the compound %s a health concern."),
         {if(nhc) 100 - prob else prob},
         {if(nhc) "is not" else "is"} )
