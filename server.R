@@ -142,24 +142,70 @@ function(input, output) {
   })
 
   ## Tier 3
+  MAXPTS = 7
   
-  rv <- reactiveValues(
-    hd = data.frame("Prob" = c(5, 50, 95), "Value" = c(70, 106, 130)),
-    he = data.frame("Prob" = c(5, 50, 95), "Value" = c(20, 50, 100))
-  )
+  h_shown_f <- function(h) {
+    n <- as.numeric(input[[paste0(h, "_points")]])
+    c(1, diff(seq((MAXPTS-2)%/%2, by=n-2, len=MAXPTS-1) %/% (MAXPTS-2)), 1)
+  }
 
-  # Render the table and set up editing, for both hd and he
-  lapply(list("hd", "he"), function(h) {
-    output[[paste0(h, "_table")]] <- renderDT(rv[[paste0(h,"")]],
-      editable="row", class="compact", rownames=FALSE, selection = 'none',
-      options = list(paging = FALSE, searching = FALSE, info = FALSE))
+  rv <- reactiveValues()
+  # h_shown <- reactiveValues()
+  h_shown <- list()
+  
+  lapply(
+    c("hd", "he"), function(h) {
+      h_shown[[h]] <- reactive(h_shown_f(h))
 
-      table = paste0(h, "_table")
-      cell = paste0(table, "_cell_edit")
-      observeEvent(input[[cell]], {
-        rv[[h]] <<- editData(rv[[h]], input[[cell]], table, rownames = FALSE)
+      observe({
+        sh <- h_shown[[h]]()
+        lapply(which(sh == 1),
+               function(x) { shinyjs::show(sprintf("%s_l%d", h, x)) })
+        lapply(which(sh == 0),
+               function(x) { shinyjs::hide(sprintf("%s_l%d", h, x)) })
       })
-  })
+      
+      observe({
+        hmin <- input[[sprintf("%sRangeMin", h)]]
+        hmax <- input[[sprintf("%sRangeMin", h)]]
+        lapply(1:MAXPTS, function(x) { updateNumericInput(
+          inputId=sprintf("%s_%d", h, x), min=hmin, max=hmax)})
+      })
+      
+      observe({
+        showns <- which(h_shown[[h]]() == 1)
+        probs = sapply(showns,
+                       function(x) { input[[sprintf("%s_p%d", h, x)]] })
+        vals = sapply(showns,
+                      function(x) { input[[sprintf("%s_%d", h, x)]] })
+        rv[[h]] <- data.frame("Prob" = probs, "Value" = vals)
+      })
+      
+    })
+  
+
+  # observe({
+  #   for(h in c("hd", "he")) {
+  #     rv[[h]] <- data.frame("Prob" = )
+  # }})
+
+  # rv <- reactiveValues(
+  #   hd = data.frame("Prob" = c(5, 50, 95), "Value" = c(70, 106, 130)),
+  #   he = data.frame("Prob" = c(5, 50, 95), "Value" = c(20, 50, 100))
+  # )
+  
+  # # Render the table and set up editing, for both hd and he
+  # lapply(list("hd", "he"), function(h) {
+  #   output[[paste0(h, "_table")]] <- renderDT(rv[[paste0(h,"")]],
+  #     editable="row", class="compact", rownames=FALSE, selection = 'none',
+  #     options = list(paging = FALSE, searching = FALSE, info = FALSE))
+  # 
+  #     table = paste0(h, "_table")
+  #     cell = paste0(table, "_cell_edit")
+  #     observeEvent(input[[cell]], {
+  #       rv[[h]] <<- editData(rv[[h]], input[[cell]], table, rownames = FALSE)
+  #     })
+  # })
 
   fitsorted <- function(data){
     d <- data[order(data$Value),]
@@ -173,14 +219,16 @@ function(input, output) {
       probs = unlist(d$Prob / 100),
       lower = 0)
   }
-    
-  observe(tryCatch(
-    { rv$fit_hd <- fitsorted(rv$hd) },
-    error=function(e) { showNotification(e$message, type="error") }))
 
-  observe(tryCatch(
-    { rv$fit_he <- fitsorted(rv$he) },
-    error=function(e) { showNotification(e$message, type="error") }))
+  lapply(c("hd", "he"), function(h) {
+    observe(tryCatch(
+      { rv[[sprintf("fit_%s", h)]] <- fitsorted(rv[[h]]) },
+      error=function(e) { showNotification(e$message, type="error") }))
+  })
+  
+  # observe(tryCatch(
+  #   { rv$fit_he <- fitsorted(rv$he) },
+  #   error=function(e) { showNotification(e$message, type="error") }))
 
   # Get numbers from the SHELF fit with the given probability distribution
   # and probabilities/quantiles
@@ -208,6 +256,16 @@ function(input, output) {
     }
   }
 
+  # for(h in c("hd", "he")) {
+  #   for(what in c("q", "p", "d")) {
+  #     assign(paste0(what, h),
+  #            function(arg){ 
+  #              print(sprintf("pf %s %s", h, what))
+  #              probfunc(
+  #              what, rv[[paste0("fit_", h)]],
+  #              input[[paste0(h, "_dist")]], arg)})
+  #   }
+  # }
 
   qhd <- function(probs){
     probfunc("q", rv$fit_hd, input$hd_dist, probs)
@@ -228,24 +286,24 @@ function(input, output) {
     probfunc("p", rv$fit_he, input$he_dist, q)
   }
 
-  # Resize list of probabilities by interpolation
-  observeEvent(input$hd_points, {
-    pts = as.integer(input$hd_points)
-    probs <- rv$hd[,"Prob"]
-    if(pts != length(probs)){
-      probs <- seq(probs[1], probs[length(probs)], len=pts)
-      rv$hd <- data.frame("Prob" = probs, "Value" = round(qhd(probs / 100), 1))
-    }
-  })
-
-  observeEvent(input$he_points, {
-    pts = as.integer(input$he_points)
-    probs <- rv$he[,"Prob"]
-    if(pts != length(probs)){
-      probs <- seq(probs[1], probs[length(probs)], len=pts)
-      rv$he <- data.frame("Prob" = probs, "Value" = round(qhe(probs / 100), 1))
-    }
-  })
+  # # Resize list of probabilities by interpolation
+  # observeEvent(input$hd_points, {
+  #   pts = as.integer(input$hd_points)
+  #   probs <- rv$hd[,"Prob"]
+  #   if(pts != length(probs)){
+  #     probs <- seq(probs[1], probs[length(probs)], len=pts)
+  #     rv$hd <- data.frame("Prob" = probs, "Value" = round(qhd(probs / 100), 1))
+  #   }
+  # })
+  # 
+  # observeEvent(input$he_points, {
+  #   pts = as.integer(input$he_points)
+  #   probs <- rv$he[,"Prob"]
+  #   if(pts != length(probs)){
+  #     probs <- seq(probs[1], probs[length(probs)], len=pts)
+  #     rv$he <- data.frame("Prob" = probs, "Value" = round(qhe(probs / 100), 1))
+  #   }
+  # })
 
   t3compute = function(n = 10000, pskip = 1e-5, reverse = FALSE) {
     minq = min(qhd(pskip), qhe(pskip))

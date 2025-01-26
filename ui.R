@@ -1,8 +1,15 @@
 library(shinyjs)
 library(DT)
 
+MAXPTS = 7
+
 fluidPage(
   useShinyjs(),
+  tags$head(
+    tags$style(HTML("
+    .unctight div { margin: .05em  }
+    "))),
+
   # Application title
   titlePanel("The (un)certainty calculator"),
   
@@ -47,7 +54,7 @@ fluidPage(
     
     tabPanel(
       "Tier 1",
-      htmlOutput("t1text"),
+      htmlOutput("t1text")
     ),
     
     tabPanel(
@@ -107,15 +114,24 @@ fluidPage(
       sidebarLayout(
         sidebarPanel(
           width = 4,
+
           selectInput(
             "hd_points", label = "# of HD percentiles",
-            choices = list("2 points" = 2, "3 points" = 3,
-                           "4 points" = 4, "5 points" = 5),
+            choices = setNames(
+              2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
             selected = 3),
-
-          # uiOutput("hd_list"),
+          lapply(1:MAXPTS, function(x) {
+            labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
+            splitLayout(
+              id=sprintf("hd_l%d", x),
+              numericInput(sprintf("hd_p%d", x), label=labs[1],
+                           min=1, max=100, step=1, value=x*15-10),
+              numericInput(sprintf("hd_%d", x), label=labs[2],
+                           min=10, max=200, step=1, value=x*10+30),
+              class="unctight")
+          }),
+          
           DTOutput("hd_table"),
-          # shinyjs::hidden(textOutput("hd_error")),
 
           selectInput(
             "hd_dist", label = "HD distribution",
@@ -125,10 +141,19 @@ fluidPage(
           
           selectInput(
             "he_points", label = "# of HE percentiles",
-            choices = list("2 points" = 2, "3 points" = 3,
-                           "4 points" = 4, "5 points" = 5),
+            choices = setNames(
+              2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
             selected = 3),
-          
+          lapply(1:MAXPTS, function(x) {
+            labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
+            splitLayout(
+              id=sprintf("he_l%d", x),
+              numericInput(sprintf("he_p%d", x), label=labs[1],
+                           min=1, max=100, step=1, value=x*15-10),
+              numericInput(sprintf("he_%d", x), label=labs[2],
+                           min=10, max=200, step=1, value=x*15+65),
+              class="unctight")
+          }),
           DTOutput("he_table"),
 
           selectInput(
@@ -141,7 +166,7 @@ fluidPage(
         # Show a plot of the generated distribution
         mainPanel(
           width = 6,
-          hidden(plotOutput("t3plot")),
+          plotOutput("t3plot"),
           htmlOutput("t3text")
         )
       )
