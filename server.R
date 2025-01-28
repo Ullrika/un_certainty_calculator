@@ -5,17 +5,15 @@ library(ggplot2)
 function(input, output) {
 
   # Units
-  observe(if(input$hdRangeMin >= input$hdRangeMax) {
+  observe(if(input$hd_min >= input$hd_max) {
     showNotification("HD lower limit must be < upper limit", type="error")
   }else{
-    updateSliderInput(inputId="hd", min=input$hdRangeMin,
-                      max=input$hdRangeMax)
+    updateSliderInput(inputId="hd", min=input$hd_min, max=input$hd_max)
   })
-  observe(if(input$heRangeMin >= input$heRangeMax) {
+  observe(if(input$he_min >= input$he_max) {
     showNotification("HE lower limit must be < upper limit", type="error")
   }else{
-    updateSliderInput(inputId="he", min=input$heRangeMin,
-                      max=input$heRangeMax)
+    updateSliderInput(inputId="he", min=input$he_min, max=input$he_max)
   })
   
   
@@ -108,10 +106,10 @@ function(input, output) {
         lhs = if(nhc) 100 - input$pc[1] else input$pc[2]
         withMathJax(HTML(paste(
           sprintf(
-            "Practical certainty is obtained if \\(\\frac{y}{x} %s 1\\).",
+            "<p>Practical certainty is obtained if \\(\\frac{y}{x} %s 1\\).",
             {if(nhc) ">" else "<"}),
           sprintf(
-            "<br>With these numbers, the ratio is \\(\\frac{%g}{%g} = %.2f\\).",
+            "<p>With these numbers, the ratio is \\(\\frac{%g}{%g} = %.2f\\).",
             input$hd, input$he, ratio)
         )))
       } else {
@@ -119,16 +117,15 @@ function(input, output) {
         notlost = if(nhc) 100 - input$pc[1] else input$pc[2]
         reached = lhs >= notlost
         withMathJax(HTML(paste(
-          "Practical certainty is obtained if ",
+          "<p>Practical certainty is obtained if ",
           sprintf("\\(100 - \\min(100, P(HD %s y) + P(HE %s x)) \\geq %g\\).",
                   {if(nhc) "<" else ">"}, {if(nhc) ">" else "<"}, notlost),
-          "<br>With these numbers, the left hand side is ",
+          "<p>With these numbers, the left hand side is ",
           sprintf("\\(100 - \\min(100, %g + %g) = %g\\).",
                   input$hd_pr, input$he_pr, lhs)
         )))},
       
-      HTML("<p style='margin-top: 1em'>"),
-
+      HTML("<p>"),
       if(reached) sprintf(paste(
         "Practical certainty is reached. The experts are at least %d%%",
         "certain that the compound %s a health concern."), lhs,
@@ -144,68 +141,49 @@ function(input, output) {
   ## Tier 3
   MAXPTS = 7
   
-  h_shown_f <- function(h) {
-    n <- as.numeric(input[[paste0(h, "_points")]])
-    c(1, diff(seq((MAXPTS-2)%/%2, by=n-2, len=MAXPTS-1) %/% (MAXPTS-2)), 1)
-  }
+  h_shown <- reactiveValues()
+  h_vals <- reactiveValues()
+  h_fit <- reactiveValues()
 
-  rv <- reactiveValues()
-  # h_shown <- reactiveValues()
-  h_shown <- list()
-  
   lapply(
     c("hd", "he"), function(h) {
-      h_shown[[h]] <- reactive(h_shown_f(h))
 
+      # Decide what rows to show depending on hx_points
       observe({
-        sh <- h_shown[[h]]()
+        n <- as.numeric(input[[paste0(h, "_points")]])
+        h_shown[[h]] <-  c(1, diff(seq(
+          (MAXPTS - 2) %/% 2, by=n - 2, len=MAXPTS - 1) %/% (MAXPTS - 2)), 1)
+      })
+
+      # Show/hide rows when h_shown$hx changes
+      observe({
+        sh <- h_shown[[h]]
         lapply(which(sh == 1),
                function(x) { shinyjs::show(sprintf("%s_l%d", h, x)) })
         lapply(which(sh == 0),
                function(x) { shinyjs::hide(sprintf("%s_l%d", h, x)) })
       })
       
+      # Adjust min/max based on hx_min/hx_max
       observe({
-        hmin <- input[[sprintf("%sRangeMin", h)]]
-        hmax <- input[[sprintf("%sRangeMin", h)]]
+        hmin <- input[[paste0(h, "_min")]]
+        hmax <- input[[paste0(h, "_max")]]
         lapply(1:MAXPTS, function(x) { updateNumericInput(
           inputId=sprintf("%s_%d", h, x), min=hmin, max=hmax)})
       })
       
-      observe({
-        showns <- which(h_shown[[h]]() == 1)
-        probs = sapply(showns,
-                       function(x) { input[[sprintf("%s_p%d", h, x)]] })
-        vals = sapply(showns,
-                      function(x) { input[[sprintf("%s_%d", h, x)]] })
-        rv[[h]] <- data.frame("Prob" = probs, "Value" = vals)
+      # Collect current hx into dataframe
+      h_vals[[h]] <- reactive({
+        showns <- which(h_shown[[h]] == 1)
+        probs = sapply(
+          showns, function(x) { input[[sprintf("%s_p%d", h, x)]] })
+        vals = sapply(
+          showns, function(x) { input[[sprintf("%s_%d", h, x)]] })
+        data.frame("Prob" = probs, "Value" = vals)
       })
       
     })
   
-
-  # observe({
-  #   for(h in c("hd", "he")) {
-  #     rv[[h]] <- data.frame("Prob" = )
-  # }})
-
-  # rv <- reactiveValues(
-  #   hd = data.frame("Prob" = c(5, 50, 95), "Value" = c(70, 106, 130)),
-  #   he = data.frame("Prob" = c(5, 50, 95), "Value" = c(20, 50, 100))
-  # )
-  
-  # # Render the table and set up editing, for both hd and he
-  # lapply(list("hd", "he"), function(h) {
-  #   output[[paste0(h, "_table")]] <- renderDT(rv[[paste0(h,"")]],
-  #     editable="row", class="compact", rownames=FALSE, selection = 'none',
-  #     options = list(paging = FALSE, searching = FALSE, info = FALSE))
-  # 
-  #     table = paste0(h, "_table")
-  #     cell = paste0(table, "_cell_edit")
-  #     observeEvent(input[[cell]], {
-  #       rv[[h]] <<- editData(rv[[h]], input[[cell]], table, rownames = FALSE)
-  #     })
-  # })
 
   fitsorted <- function(data){
     d <- data[order(data$Value),]
@@ -221,17 +199,14 @@ function(input, output) {
   }
 
   lapply(c("hd", "he"), function(h) {
-    observe(tryCatch(
-      { rv[[sprintf("fit_%s", h)]] <- fitsorted(rv[[h]]) },
+    observe(tryCatch({
+      h_fit[[h]] <- fitsorted(h_vals[[h]]()) },
       error=function(e) { showNotification(e$message, type="error") }))
   })
   
-  # observe(tryCatch(
-  #   { rv$fit_he <- fitsorted(rv$he) },
-  #   error=function(e) { showNotification(e$message, type="error") }))
-
   # Get numbers from the SHELF fit with the given probability distribution
   # and probabilities/quantiles
+  # 'what' is q, d or p (as in qsn, dsn, psn etc.)
   probfunc <- function(what, fit, dist, xqp){
     if(dist == "skewnormal"){
       snd = fit$Skewnormal
@@ -256,121 +231,70 @@ function(input, output) {
     }
   }
 
-  # for(h in c("hd", "he")) {
-  #   for(what in c("q", "p", "d")) {
-  #     assign(paste0(what, h),
-  #            function(arg){ 
-  #              print(sprintf("pf %s %s", h, what))
-  #              probfunc(
-  #              what, rv[[paste0("fit_", h)]],
-  #              input[[paste0(h, "_dist")]], arg)})
-  #   }
-  # }
+  qhd <- function(probs){ probfunc("q", h_fit$hd, input$hd_dist, probs) }
+  qhe <- function(probs){ probfunc("q", h_fit$he, input$he_dist, probs) }
+  dhd <- function(x){ probfunc("d", h_fit$hd, input$hd_dist, x) }
+  dhe <- function(x){ probfunc("d", h_fit$he, input$he_dist, x) }
+  phd <- function(q){ probfunc("p", h_fit$hd, input$hd_dist, q) }
+  phe <- function(q){ probfunc("p", h_fit$he, input$he_dist, q) }
 
-  qhd <- function(probs){
-    probfunc("q", rv$fit_hd, input$hd_dist, probs)
-  }
-  qhe <- function(probs){
-    probfunc("q", rv$fit_he, input$he_dist, probs)
-  }
-  dhd <- function(x){
-    probfunc("d", rv$fit_hd, input$hd_dist, x)
-  }
-  dhe <- function(x){
-    probfunc("d", rv$fit_he, input$he_dist, x)
-  }
-  phd <- function(q){
-    probfunc("p", rv$fit_hd, input$hd_dist, q)
-  }
-  phe <- function(q){
-    probfunc("p", rv$fit_he, input$he_dist, q)
-  }
-
-  # # Resize list of probabilities by interpolation
-  # observeEvent(input$hd_points, {
-  #   pts = as.integer(input$hd_points)
-  #   probs <- rv$hd[,"Prob"]
-  #   if(pts != length(probs)){
-  #     probs <- seq(probs[1], probs[length(probs)], len=pts)
-  #     rv$hd <- data.frame("Prob" = probs, "Value" = round(qhd(probs / 100), 1))
-  #   }
-  # })
-  # 
-  # observeEvent(input$he_points, {
-  #   pts = as.integer(input$he_points)
-  #   probs <- rv$he[,"Prob"]
-  #   if(pts != length(probs)){
-  #     probs <- seq(probs[1], probs[length(probs)], len=pts)
-  #     rv$he <- data.frame("Prob" = probs, "Value" = round(qhe(probs / 100), 1))
-  #   }
-  # })
-
-  t3compute = function(n = 10000, pskip = 1e-5, reverse = FALSE) {
+  # Returns list of quantiles, ignoring the outermost tails of hd & he
+  h_qrange <- function(n, pskip) {
     minq = min(qhd(pskip), qhe(pskip))
     maxq = max(qhd(1 - pskip), qhe(1 - pskip))
-    x = seq(minq, maxq, len=n)
-    step = (maxq - minq) / n
-    if(reverse) {
-      overlap1 = dhd(x) * phe(x)
-      overlap2 = dhe(x) * (1 - phd(x))
-    } else {
-      overlap1 = dhd(x) * (1 - phe(x))
-      overlap2 = dhe(x) * phd(x)
-    }
+    seq(minq, maxq, len=n)
+  }
+  
+  # Compute the probability of HD < HE
+  t3compute = function(n = 10000, pskip = 1e-5) {
+    # Suitable points to integrate over
+    x = h_qrange(n, pskip)
+    step = (x[length(x)] - x[1]) / n
+    # Compute the integral in two ways and average 
+    overlap1 = dhd(x) * (1 - phe(x))
+    overlap2 = dhe(x) * phd(x)
     (sum(overlap1) + sum(overlap2)) * .5 * step
   }
 
   output$t3text <- renderUI({
     prob <- t3compute() * 100
-    reached = 
     if(prob <= input$pc[1] || prob >= input$pc[2]) {
       nhc = (prob <= input$pc[1])
       sprintf(paste(
-        "Practical certainty is reached. The experts are at least %.2g%%",
+        "Practical certainty is reached. The experts are at least %.3g%%",
         "certain that the compound %s a health concern."),
         {if(nhc) 100 - prob else prob},
         {if(nhc) "is not" else "is"} )
-    } else {
-      sprintf(paste(
+    } else { list(
+        sprintf("Experts are only %.3g%% certain.", 100 - prob),
+        HTML("<p style='margin-top: 1em'>"),
         "Practical certainty is not reached. The assessment is inconclusive.",
         "Proceed with a refined approach to determine if the compound is",
-        "a health concern."))
-    }
+        "a health concern."
+    )}
   })
   
   output$t3plot <- renderPlot({
-    pskip = 1e-4
-    minq = min(qhd(pskip), qhe(pskip))
-    maxq = max(qhd(1 - pskip), qhe(1 - pskip))
-    x = seq(minq, maxq, len=100)
+    x = h_qrange(n=200, pskip=1e-4)
 
-    overlap1 = dhd(x) * (1 - phe(x))
-    overlap2 = dhe(x) * phd(x)
-    pldata = data.frame(val=rep(x, 2), density=c(dhd(x), dhe(x)),
-                        name=rep(c("HD", "HE"), each=length(x)))
-    ggplot(pldata) + 
-      geom_area(aes(val, density, fill=name), alpha=0.5,
-                outline.type="upper") +
-     ggtitle("Uncertainty in High Exposure \n and the Human Dose")
+    pldata = data.frame(x = x, HD = dhd(x), HE = dhe(x))
+    plp = tidyr::pivot_longer(pldata, c("HD", "HE"))
 
-    # geom_area(aes(val, density, fill=name), alpha=0.2, fill="red", color="red",
-    #           outline.type="upper") +
-    #   geom_area(aes(val, dhe), alpha=0.2, fill="blue", color="blue",
-    #             outline.type="upper") +
-    #   # 
-    # cols <- paletteer_d("nbapalettes::thunder")
-    # names(cols) = c("HE","HE*fHE" ,"HD","HD*fHD") 
-    # 
-    # 
-    # pp1 <- ggplot(data.frame(dose = c(hd,he), quantity = rep(c("HD", "HE"),each = niter)),aes(x=dose, fill = quantity)) +
-    #   geom_density(alpha=0.2) +
-    #   #scale_fill_paletteer_d("nbapalettes::thunder") +
-    #   scale_fill_manual(values = cols) +
-    #   scale_x_continuous(trans='log10') +
-    #   ggtitle("Uncertainty in High Exposure \n and the Human Dose")
+    ggplot(plp, aes(x=x, y=value, fill=name, color=name)) + 
+      geom_area(alpha=0.3, outline.type="upper", position="identity") +
+      scale_color_manual(values=c("red", "blue")) +
+      scale_fill_manual(values=c("red", "blue")) +
+      labs(x=sprintf("[%s]", input$units), y="Probability") +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=12),
+            legend.title = element_blank(),
+            legend.position = c(0.93, 0.88),
+            legend.justification = c(0.93, 0.88),
+            legend.key.size = unit(1.1, 'cm'),
+            legend.text = element_text(size=12)) +
+      ggtitle("Uncertainty in High Exposure and the Human Dose")
     
   })
-    
-    
+
 }
 

@@ -7,7 +7,8 @@ fluidPage(
   useShinyjs(),
   tags$head(
     tags$style(HTML("
-    .unctight div { margin: .05em  }
+    .unctight div { margin-bottom: .05em }
+    .shiny-split-layout > div { overflow: visible }
     "))),
 
   # Application title
@@ -35,18 +36,18 @@ fluidPage(
           "units", label = "Units of measurement", value = "µg / kg bw"),
         splitLayout(
           numericInput(
-            "hdRangeMin", label = "Human Dose low limit", min = 1,
+            "hd_min", label = "Human Dose low limit", min = 1,
             max = 100000, step = 1, value = 10),
           numericInput(
-            "hdRangeMax", label = "high limit", min = 10,
+            "hd_max", label = "high limit", min = 10,
             max = 1000000, step = 1, value = 200)
         ),
         splitLayout(
           numericInput(
-            "heRangeMin", label = "High Exposure low limit", min = 1,
+            "he_min", label = "High Exposure low limit", min = 1,
             max = 100000, step = 1, value = 10),
           numericInput(
-            "heRangeMax", label = "high limit", min = 10,
+            "he_max", label = "high limit", min = 10,
             max = 1000000, step = 1, value = 200)
         )
       )
@@ -115,11 +116,21 @@ fluidPage(
         sidebarPanel(
           width = 4,
 
-          selectInput(
-            "hd_points", label = "# of HD percentiles",
-            choices = setNames(
-              2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
-            selected = 3),
+          p(paste("Elicit expert information about the expected",
+               "Human Dose distribution:")),
+          splitLayout(
+            selectInput(
+              "hd_dist", label = "HD distribution",
+              choices = list("Normal" = "normal", "Log-normal" = "lognormal",
+                             "Skew-normal"="skewnormal"),
+              selected = "lognormal"),
+            selectInput(
+              "hd_points", label = "# of HD percentiles",
+              choices = setNames(
+                2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
+              selected = 3)
+          ),
+
           lapply(1:MAXPTS, function(x) {
             labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
             splitLayout(
@@ -127,23 +138,27 @@ fluidPage(
               numericInput(sprintf("hd_p%d", x), label=labs[1],
                            min=1, max=100, step=1, value=x*15-10),
               numericInput(sprintf("hd_%d", x), label=labs[2],
-                           min=10, max=200, step=1, value=x*10+30),
-              class="unctight")
+                           min=10, max=200, step=1, value=x*10+60),
+              class=if(x < MAXPTS) "unctight" else "")
           }),
-          
-          DTOutput("hd_table"),
 
-          selectInput(
-            "hd_dist", label = "HD distribution",
-            choices = list("Normal" = "normal", "Log-normal" = "lognormal",
-                          "Skew-normal"="skewnormal"),
-            selected = "lognormal"),
+
+          p(paste("Elicit expert information about the expected",
+                  "High Exposure distribution:")),
           
-          selectInput(
-            "he_points", label = "# of HE percentiles",
-            choices = setNames(
-              2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
-            selected = 3),
+          splitLayout(
+            selectInput(
+              "he_dist", label = "HE distribution",
+              choices = list("Normal" = "normal", "Log-normal" = "lognormal",
+                             "Skew-normal"="skewnormal"),
+              selected = "lognormal"),
+            selectInput(
+              "he_points", label = "# of HE percentiles",
+              choices = setNames(
+                2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
+              selected = 3)
+          ),
+
           lapply(1:MAXPTS, function(x) {
             labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
             splitLayout(
@@ -151,16 +166,10 @@ fluidPage(
               numericInput(sprintf("he_p%d", x), label=labs[1],
                            min=1, max=100, step=1, value=x*15-10),
               numericInput(sprintf("he_%d", x), label=labs[2],
-                           min=10, max=200, step=1, value=x*15+65),
+                           min=10, max=200, step=1, value=x*10+10),
               class="unctight")
-          }),
-          DTOutput("he_table"),
+          })
 
-          selectInput(
-            "he_dist", label = "HE distribution",
-            choices = list("Normal" = "normal", "Log-normal" = "lognormal",
-                          "Skew-normal"="skewnormal"),
-            selected = "lognormal")
         ),
         
         # Show a plot of the generated distribution
