@@ -7,14 +7,16 @@ function(input, output) {
 
   # Units
   observe(if(input$hd_min >= input$hd_max) {
-    showNotification("HD lower limit must be < upper limit", type="error")
+    showNotification("HC lower limit must be < upper limit", type="error")
   }else{
-    updateSliderInput(inputId="hd", min=input$hd_min, max=input$hd_max)
+    updateSliderInput(
+      inputId="hd", min=input$hd_min, value=input$hd_min, max=input$hd_max)
   })
   observe(if(input$he_min >= input$he_max) {
     showNotification("HE lower limit must be < upper limit", type="error")
   }else{
-    updateSliderInput(inputId="he", min=input$he_min, max=input$he_max)
+    updateSliderInput(
+      inputId="he", min=input$he_min, value=input$he_max, max=input$he_max)
   })
   
   
@@ -23,7 +25,7 @@ function(input, output) {
   output$t1text <- renderUI(list(
     withMathJax(paste(
     "Ask the experts to agree how certain they are as a group that",
-    "\\(\\frac{HE}{HD} < 1\\)",
+    "\\(\\frac{HE}{HC} < 1\\)",
     "considering all evidence and all identified (non-standard or ",
     "standard) sources of uncertainty.")),
     HTML(paste("<p style='margin-top: 1em'>If the experts are at least",
@@ -33,7 +35,7 @@ function(input, output) {
   ))
   
   # Tier 2
-  
+
   output$pctable <- renderTable({
     fr<-data.frame(
       a = c(sprintf("%g", input$pc[1]), sprintf("%g", 100-input$pc[1])),
@@ -48,8 +50,7 @@ function(input, output) {
   observe({
     nhc = input$concern_yn == 1
     lost = if(nhc) input$pc[1] else 100 - input$pc[2]
-    label = sprintf("P(HD %s %g)", (if(nhc) "<" else ">"), input$hd)
-    # label = if(nhc) "P(HD < y)" else "P(HD > y)"
+    label = sprintf("P(HC %s %g)", (if(nhc) "<" else ">"), input$hd)
     updateSliderInput(inputId = "hd_pr", max = lost - 1, label = label)
   })
 
@@ -72,27 +73,27 @@ function(input, output) {
   observe({
     nhc = input$concern_yn == 1
     lost = if(nhc) input$pc[1] else 100 - input$pc[2]
-    est = if(nhc) "conservative" else "best-case"
+    # est = if(nhc) "conservative" else "best-case"
     hdsgn = if(nhc) "<" else ">"
     output$hd_text <- renderText({ sprintf(paste(
-      "Elicit a %s estimate of a Humans Dose as a quantile",
-      "<i>y</i> and the associated confidence ",
-      "<span style='white-space:nowrap'><i>P</i>(HD %s <i>y</i>).</span><p>"),
-      est, hdsgn)})
+      "Elicit a number for the Human Concentration as a quantile",
+      "<i>y</i> and the associated probability ",
+      "<span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>).</span><p>"),
+      hdsgn)})
     if(input$method == 1) {
       he_pr = lost - input$hd_pr
       hesgn = if(nhc) ">" else "<"
       output$he_text <- renderText({ sprintf(paste(
-        "Elicit a %s estimate of a High Exposure as the quantile",
+        "Elicit a number for the High Exposure as the quantile",
         "<i>x</i> such that <span style='white-space:nowrap'>",
         "<i>P</i>(HE %s <i>x</i>) = %g%%.</span><p>"),
-        est, hesgn, he_pr)})
+        hesgn, he_pr)})
     } else {
       updateSliderInput(inputId="he", value=input$hd)
       sgn = if(nhc) "above" else "below"
       output$he_text <- renderText({ sprintf(paste(
-        "Ask the experts to judge their probability that a High Exposure is",
-        "%s <i>x</i> = %g %s per day.<p>"),
+        "Ask the experts to judge their probability that the High Exposure is",
+        "%s <i>x</i> = %g %s.<p>"),
         sgn, input$hd, input$units)})
     }
   })
@@ -119,7 +120,7 @@ function(input, output) {
         reached = lhs >= notlost
         withMathJax(HTML(paste(
           "<p>Practical certainty is obtained if ",
-          sprintf("\\(100 - \\min(100, P(HD %s y) + P(HE %s x)) \\geq %g\\).",
+          sprintf("\\(100 - \\min(100, P(HC %s y) + P(HE %s x)) \\geq %g\\).",
                   {if(nhc) "<" else ">"}, {if(nhc) ">" else "<"}, notlost),
           "<p>With these numbers, the left hand side is ",
           sprintf("\\(100 - \\min(100, %g + %g) = %g\\).",
@@ -167,9 +168,17 @@ function(input, output) {
       # Adjust min/max based on hx_min/hx_max
       observe({
         hmin <- input[[paste0(h, "_min")]]
+        lapply(1:MAXPTS, \(x) { updateNumericInput(
+          inputId=sprintf("%s_%d", h, x), min=hmin)})
+        updateNumericInput(inputId=sprintf("%s_p%d", h, 1), value=1)
+        updateNumericInput(inputId=sprintf("%s_%d", h, 1), value=hmin)
+      })
+      observe({
         hmax <- input[[paste0(h, "_max")]]
         lapply(1:MAXPTS, \(x) { updateNumericInput(
-          inputId=sprintf("%s_%d", h, x), min=hmin, max=hmax)})
+          inputId=sprintf("%s_%d", h, x), max=hmax)})
+        updateNumericInput(inputId=sprintf("%s_p%d", h, MAXPTS), value=99)
+        updateNumericInput(inputId=sprintf("%s_%d", h, MAXPTS), value=hmax)
       })
       
       # Collect current hx into dataframe
@@ -268,18 +277,18 @@ function(input, output) {
     if(!is.null(h_error[["hd"]]) || !is.null(h_error[["he"]]))
       return(NULL)
     prob <- t3compute() * 100
-    if(prob >= .01) {
-      jaxprob <-sprintf("%.3g\\%%", prob)
+    if(prob < 1) {
+      prprob <- "< 1"
+    } else if(prob > 99) {
+      prprob <- "> 99"
     } else {
-      jaxprob <- stringr::str_replace(
-        sprintf("%.3e", prob / 100),
-        "e\\+?(-?)0*(.*)", " \\\\times 10^{\\1\\2}")
+      prprob <- sprintf("≈ %d", round(prob))
     }
-    
+
     list(
-      HTML("<p>In this model of HD and HE,"),
-      withMathJax(sprintf(" \\(P(HD < HE) = %s\\).", jaxprob)),
-      
+      HTML("<p>In this model of the distributions,"),
+      sprintf("P(HC < HE) %s%%", prprob),
+
       if(prob <= input$pc[1] || prob >= input$pc[2]) {
         nhc = (prob <= input$pc[1])
         probx = if(nhc) 100 - prob else prob
@@ -302,8 +311,8 @@ function(input, output) {
       return(NULL)
 
     x = h_qrange(n=200, pskip=1e-4)
-    pldata = data.frame(x = x, HD = dhd(x), HE = dhe(x))
-    plp = tidyr::pivot_longer(pldata, c("HD", "HE"))
+    pldata = data.frame(x = x, HC = dhd(x), HE = dhe(x))
+    plp = tidyr::pivot_longer(pldata, c("HC", "HE"))
     
     ggplot(plp, aes(x=x, y=value, fill=name, color=name)) + 
       geom_area(alpha=0.3, outline.type="upper", position="identity") +
@@ -317,9 +326,13 @@ function(input, output) {
             legend.justification = c(0.93, 0.88),
             legend.key.size = unit(1.1, 'cm'),
             legend.text = element_text(size=12)) +
-      ggtitle("Uncertainty in High Exposure and the Human Dose")
+      ggtitle("Uncertainty in High Exposure and the Human Concentration")
     
   })
 
+  # Export
+  # exportera T2:  
+  # exportera T3: 
+  
 }
 

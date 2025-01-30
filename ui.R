@@ -1,7 +1,8 @@
 library(shinyjs)
 library(DT)
 
-MAXPTS = 7
+MAXPTS <- 7
+initprobs <- c(1, 5, 20, 50, 80, 95, 99)
 
 fluidPage(
   useShinyjs(),
@@ -33,22 +34,22 @@ fluidPage(
       
       verticalLayout(
         textInput(
-          "units", label = "Units of measurement", value = "µg / kg bw"),
+          "units", label = "Units of measurement", value = "µM"),
         splitLayout(
           numericInput(
             "hd_min", label = "Human Dose low limit", min = 1,
-            max = 100000, step = 1, value = 10),
+            max = 100000, step = 10, value = 20),
           numericInput(
             "hd_max", label = "high limit", min = 10,
-            max = 1000000, step = 1, value = 200)
+            max = 1000000, step = 10, value = 200)
         ),
         splitLayout(
           numericInput(
             "he_min", label = "High Exposure low limit", min = 1,
-            max = 100000, step = 1, value = 10),
+            max = 100000, step = 10, value = 10),
           numericInput(
             "he_max", label = "high limit", min = 10,
-            max = 1000000, step = 1, value = 200)
+            max = 1000000, step = 10, value = 130)
         )
       )
     ),
@@ -75,9 +76,9 @@ fluidPage(
             selected = 1),
           
           htmlOutput("hd_text"),
-          sliderInput("hd", "Point of departure (Human Dose)",
-                      min = 1, max = 200, value = 70),
-          sliderInput("hd_pr", "P(HD < y)",
+          sliderInput("hd", "Point of departure (y)",
+                      min = 1, max = 200, value = 10),
+          sliderInput("hd_pr", "P(HC < y)",
                       min = 1, max = 25, value = 5, post="%"),
 
           htmlOutput("he_text"),
@@ -89,7 +90,7 @@ fluidPage(
         
         # Show a plot of the generated distribution
         mainPanel(
-          width = 5,
+          width = 7,
           uiOutput("t2results")
         )
       )
@@ -100,13 +101,13 @@ fluidPage(
 
       sidebarLayout(
         sidebarPanel(
-          width = 4,
+          width = 5,
 
           p(paste("Elicit expert information about the expected",
-               "Human Dose distribution:")),
+               "Human Concentration distribution:")),
           splitLayout(
             selectInput(
-              "hd_dist", label = "HD distribution",
+              "hd_dist", label = "HC distribution",
               choices = list("Normal" = "normal", "Log-normal" = "lognormal",
                              "Skew-normal"="skewnormal"),
               selected = "lognormal"),
@@ -122,9 +123,11 @@ fluidPage(
             splitLayout(
               id=sprintf("hd_l%d", x),
               numericInput(sprintf("hd_p%d", x), label=labs[1],
-                           min=1, max=100, step=1, value=x*15-10),
+                           min=1, max=99, step=1,
+                           value=initprobs[x]),
               numericInput(sprintf("hd_%d", x), label=labs[2],
-                           min=10, max=200, step=1, value=x*10+60),
+                           min=20, max=200, step=1,
+                           value=round(20 + (x - 1) * 180 / (MAXPTS - 1))),
               class=if(x < MAXPTS) "unctight" else "")
           }),
           htmlOutput("hd_error"),
@@ -148,11 +151,13 @@ fluidPage(
           lapply(1:MAXPTS, function(x) {
             labs <- if(x == 1) c("Percentile", "Value") else c(NULL, NULL)
             splitLayout(
-              id=sprintf("he_l%d", x),
+              id = sprintf("he_l%d", x),
               numericInput(sprintf("he_p%d", x), label=labs[1],
-                           min=1, max=100, step=1, value=x*15-10),
+                           min=1, max=99, step=1,
+                           value=initprobs[x]),
               numericInput(sprintf("he_%d", x), label=labs[2],
-                           min=10, max=200, step=1, value=x*10+10),
+                           min=10, max=130, step=1,
+                           value=round(10 + (x - 1) * 120 / (MAXPTS - 1))),
               class="unctight")
           }),
           htmlOutput("he_error")
@@ -160,13 +165,17 @@ fluidPage(
         
         # Show a plot of the generated distribution
         mainPanel(
-          width = 6,
+          width = 7,
           plotOutput("t3plot"),
           htmlOutput("t3text", style="margin-top: .5em")
         )
       )
-    )
+    ),
 
-  )
+    tabPanel(
+      "Export",
+    )
+      
+    )
 )
 
