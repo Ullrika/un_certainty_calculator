@@ -112,14 +112,14 @@ fluidPage(
                              "Skew-normal"="skewnormal"),
               selected = "lognormal"),
             selectInput(
-              "hd_points", label = "Percentiles",
+              "hd_points", label = "Number of points",
               choices = setNames(
                 2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
               selected = 3)
           ),
 
           lapply(1:MAXPTS, function(x) {
-            labs <- if(x == 1) c("Percentile", "Value") else c(NULL, NULL)
+            labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
             splitLayout(
               id=sprintf("hd_l%d", x),
               numericInput(sprintf("hd_p%d", x), label=labs[1],
@@ -142,14 +142,14 @@ fluidPage(
                              "Skew-normal"="skewnormal"),
               selected = "lognormal"),
             selectInput(
-              "he_points", label = "Percentiles",
+              "he_points", label = "Number of points",
               choices = setNames(
                 2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
               selected = 3)
           ),
 
           lapply(1:MAXPTS, function(x) {
-            labs <- if(x == 1) c("Percentile", "Value") else c(NULL, NULL)
+            labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
             splitLayout(
               id = sprintf("he_l%d", x),
               numericInput(sprintf("he_p%d", x), label=labs[1],
@@ -175,7 +175,7 @@ fluidPage(
     tabPanel(
       "Export",
     )
-      
-    )
+    
+  )
 )
 

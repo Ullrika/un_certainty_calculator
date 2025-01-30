@@ -205,7 +205,7 @@ function(input, output) {
 
     if(is.unsorted(d$Prob, strictly=TRUE) ||
        is.unsorted(d$Value, strictly=TRUE)) {
-      stop("Percentiles/values must be sorted")
+      stop("Probabilities and values must be sorted")
     }
     SHELF::fitdist(
       vals = unlist(d$Value),
@@ -286,7 +286,7 @@ function(input, output) {
     }
 
     list(
-      HTML("<p>In this model of the distributions,"),
+      HTML("<p>With this model of the HC and HE distributions,"),
       sprintf("P(HC < HE) %s%%", prprob),
 
       if(prob <= input$pc[1] || prob >= input$pc[2]) {
