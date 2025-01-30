@@ -2,6 +2,7 @@ library(sn)
 library(SHELF)
 library(ggplot2)
 
+
 function(input, output) {
 
   # Units
@@ -144,7 +145,8 @@ function(input, output) {
   h_shown <- reactiveValues()
   h_vals <- reactiveValues()
   h_fit <- reactiveValues()
-
+  h_error <- reactiveValues()
+  
   lapply(
     c("hd", "he"), function(h) {
 
@@ -158,17 +160,15 @@ function(input, output) {
       # Show/hide rows when h_shown$hx changes
       observe({
         sh <- h_shown[[h]]
-        lapply(which(sh == 1),
-               function(x) { shinyjs::show(sprintf("%s_l%d", h, x)) })
-        lapply(which(sh == 0),
-               function(x) { shinyjs::hide(sprintf("%s_l%d", h, x)) })
+        lapply(which(sh == 1), \(x) { shinyjs::show(sprintf("%s_l%d", h, x)) })
+        lapply(which(sh == 0), \(x) { shinyjs::hide(sprintf("%s_l%d", h, x)) })
       })
       
       # Adjust min/max based on hx_min/hx_max
       observe({
         hmin <- input[[paste0(h, "_min")]]
         hmax <- input[[paste0(h, "_max")]]
-        lapply(1:MAXPTS, function(x) { updateNumericInput(
+        lapply(1:MAXPTS, \(x) { updateNumericInput(
           inputId=sprintf("%s_%d", h, x), min=hmin, max=hmax)})
       })
       
@@ -176,21 +176,27 @@ function(input, output) {
       h_vals[[h]] <- reactive({
         showns <- which(h_shown[[h]] == 1)
         probs = sapply(
-          showns, function(x) { input[[sprintf("%s_p%d", h, x)]] })
+          showns, \(x) { input[[sprintf("%s_p%d", h, x)]] })
         vals = sapply(
-          showns, function(x) { input[[sprintf("%s_%d", h, x)]] })
+          showns, \(x) { input[[sprintf("%s_%d", h, x)]] })
         data.frame("Prob" = probs, "Value" = vals)
       })
       
+      # Show an hx error message, if any
+      h_error[[h]] <- NULL
+      output[[paste0(h, "_error")]] <- renderUI(
+        if(is.null(h_error[[h]])) "" else p(
+          h_error[[h]], class="shiny-output-error")
+      )
     })
   
 
-  fitsorted <- function(data){
-    d <- data[order(data$Value),]
+  fitsorted <- function(data, resort=FALSE){
+    d <- if(resort) data[order(data$Value),] else data
 
     if(is.unsorted(d$Prob, strictly=TRUE) ||
        is.unsorted(d$Value, strictly=TRUE)) {
-      stop("Values and probabilities must be sorted the same way")
+      stop("Percentiles/values must be sorted")
     }
     SHELF::fitdist(
       vals = unlist(d$Value),
@@ -200,8 +206,10 @@ function(input, output) {
 
   lapply(c("hd", "he"), function(h) {
     observe(tryCatch({
-      h_fit[[h]] <- fitsorted(h_vals[[h]]()) },
-      error=function(e) { showNotification(e$message, type="error") }))
+      h_fit[[h]] <- fitsorted(h_vals[[h]]())
+      h_error[[h]] <- NULL
+    },
+    error=\(e) { h_error[[h]] <- e$message }))
   })
   
   # Get numbers from the SHELF fit with the given probability distribution
@@ -211,23 +219,23 @@ function(input, output) {
     if(dist == "skewnormal"){
       snd = fit$Skewnormal
       if(is.na(snd$location))
-        stop("Skew-normal distribution was not fitted")
+        stop("Failed to fit skew-normal distribution")
       func = paste0(what, "sn")
       do.call(func, list(xqp, snd$location, snd$scale, snd$slant))
     } else if (dist == "lognormal"){
       lnd = fit$Log.normal
       if(is.na(lnd$mean.log.X))
-        stop("Log-normal distribution was not fitted")
+        stop("Failed to fit log-normal distribution")
       func = paste0(what, "lnorm")
       do.call(func, list(xqp, lnd$mean.log.X, lnd$sd.log.X))
     } else if (dist == "normal"){
       nd = fit$Normal
       if(is.na(nd$mean))
-        stop("Normal distribution was not fitted")
+        stop("Failed to fit normal distribution")
       func = paste0(what, "norm")
       do.call(func, list(xqp, nd$mean, nd$sd))
     } else {
-      stop("unknown distribution")
+      stop("Unknown distribution")
     }
   }
 
@@ -257,29 +265,46 @@ function(input, output) {
   }
 
   output$t3text <- renderUI({
+    if(!is.null(h_error[["hd"]]) || !is.null(h_error[["he"]]))
+      return(NULL)
     prob <- t3compute() * 100
-    if(prob <= input$pc[1] || prob >= input$pc[2]) {
-      nhc = (prob <= input$pc[1])
-      sprintf(paste(
-        "Practical certainty is reached. The experts are at least %.3g%%",
-        "certain that the compound %s a health concern."),
-        {if(nhc) 100 - prob else prob},
-        {if(nhc) "is not" else "is"} )
-    } else { list(
-        sprintf("Experts are only %.3g%% certain.", 100 - prob),
-        HTML("<p style='margin-top: 1em'>"),
-        "Practical certainty is not reached. The assessment is inconclusive.",
+    if(prob >= .01) {
+      jaxprob <-sprintf("%.3g\\%%", prob)
+    } else {
+      jaxprob <- stringr::str_replace(
+        sprintf("%.3e", prob / 100),
+        "e\\+?(-?)0*(.*)", " \\\\times 10^{\\1\\2}")
+    }
+    
+    list(
+      HTML("<p>In this model of HD and HE,"),
+      withMathJax(sprintf(" \\(P(HD < HE) = %s\\).", jaxprob)),
+      
+      if(prob <= input$pc[1] || prob >= input$pc[2]) {
+        nhc = (prob <= input$pc[1])
+        probx = if(nhc) 100 - prob else prob
+        HTML(sprintf(paste(
+          "<p>Practical certainty is reached. The experts are at least %.0f%%",
+          "certain that the compound %s a health concern."),
+          {floor(probx * 1) / 1},
+          {if(nhc) "is not" else "is"} ))
+      } else {
+        HTML(paste(
+        "<p>Practical certainty is not reached. The assessment is inconclusive.",
         "Proceed with a refined approach to determine if the compound is",
-        "a health concern."
-    )}
+        "a health concern."))
+      }
+    )
   })
   
   output$t3plot <- renderPlot({
-    x = h_qrange(n=200, pskip=1e-4)
+    if(!is.null(h_error[["hd"]]) || !is.null(h_error[["he"]]))
+      return(NULL)
 
+    x = h_qrange(n=200, pskip=1e-4)
     pldata = data.frame(x = x, HD = dhd(x), HE = dhe(x))
     plp = tidyr::pivot_longer(pldata, c("HD", "HE"))
-
+    
     ggplot(plp, aes(x=x, y=value, fill=name, color=name)) + 
       geom_area(alpha=0.3, outline.type="upper", position="identity") +
       scale_color_manual(values=c("red", "blue")) +

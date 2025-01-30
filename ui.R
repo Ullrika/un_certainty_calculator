@@ -75,30 +75,16 @@ fluidPage(
             selected = 1),
           
           htmlOutput("hd_text"),
-          sliderInput("hd",
-                      "Point of departure (Human Dose)",
-                      min = 1,
-                      max = 200,
-                      value = 70),
-          sliderInput("hd_pr",
-                      "P(HD < y)",
-                      min = 1,
-                      max = 25,
-                      value = 5,
-                      post="%"),
+          sliderInput("hd", "Point of departure (Human Dose)",
+                      min = 1, max = 200, value = 70),
+          sliderInput("hd_pr", "P(HD < y)",
+                      min = 1, max = 25, value = 5, post="%"),
 
           htmlOutput("he_text"),
-          sliderInput("he_pr",
-                      "P(HE > x)",
-                      min = 1,
-                      max = 50,
-                      value = 5,
-                      post="%"),
-          sliderInput("he",
-                      "High Exposure",
-                      min = 1,
-                      max = 200,
-                      value = 100)
+          sliderInput("he_pr", "P(HE > x)",
+                      min = 1, max = 50, value = 5, post="%"),
+          sliderInput("he", "High Exposure",
+                      min = 1, max = 200, value = 100)
         ),
         
         # Show a plot of the generated distribution
@@ -125,14 +111,14 @@ fluidPage(
                              "Skew-normal"="skewnormal"),
               selected = "lognormal"),
             selectInput(
-              "hd_points", label = "# of HD percentiles",
+              "hd_points", label = "Percentiles",
               choices = setNames(
                 2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
               selected = 3)
           ),
 
           lapply(1:MAXPTS, function(x) {
-            labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
+            labs <- if(x == 1) c("Percentile", "Value") else c(NULL, NULL)
             splitLayout(
               id=sprintf("hd_l%d", x),
               numericInput(sprintf("hd_p%d", x), label=labs[1],
@@ -141,7 +127,7 @@ fluidPage(
                            min=10, max=200, step=1, value=x*10+60),
               class=if(x < MAXPTS) "unctight" else "")
           }),
-
+          htmlOutput("hd_error"),
 
           p(paste("Elicit expert information about the expected",
                   "High Exposure distribution:")),
@@ -153,14 +139,14 @@ fluidPage(
                              "Skew-normal"="skewnormal"),
               selected = "lognormal"),
             selectInput(
-              "he_points", label = "# of HE percentiles",
+              "he_points", label = "Percentiles",
               choices = setNames(
                 2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
               selected = 3)
           ),
 
           lapply(1:MAXPTS, function(x) {
-            labs <- if(x == 1) c("Probability", "Value") else c(NULL, NULL)
+            labs <- if(x == 1) c("Percentile", "Value") else c(NULL, NULL)
             splitLayout(
               id=sprintf("he_l%d", x),
               numericInput(sprintf("he_p%d", x), label=labs[1],
@@ -168,15 +154,15 @@ fluidPage(
               numericInput(sprintf("he_%d", x), label=labs[2],
                            min=10, max=200, step=1, value=x*10+10),
               class="unctight")
-          })
-
+          }),
+          htmlOutput("he_error")
         ),
         
         # Show a plot of the generated distribution
         mainPanel(
           width = 6,
           plotOutput("t3plot"),
-          htmlOutput("t3text")
+          htmlOutput("t3text", style="margin-top: .5em")
         )
       )
     )
