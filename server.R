@@ -5,7 +5,26 @@ library(ggplot2)
 
 function(input, output) {
 
-  # Units
+  # Practical certainty & Units
+
+  output$pctable <- renderTable({
+    fr<-data.frame(
+      a = c(sprintf("%g", input$pc[1]), sprintf("%g", 100-input$pc[1])),
+      b = c(sprintf("%g – %g", input$pc[1], input$pc[2]),
+            sprintf("%g – %g", 100-input$pc[2], 100-input$pc[1])),
+      c = c(sprintf("%g", input$pc[2]), sprintf("%g", 100-input$pc[2])))
+    colnames(fr) <- c("No health concern", "Uncertainty", "Health concern")
+    fr},
+    spacing="m"
+  )
+
+  output$pctext <- renderUI({ helpText(paste(
+    "We accept that there is no health concern if that claim is made",
+    "with at least", sprintf("%g%%", 100 - input$pc[1]), "certainty,",
+    "or that there is a health concern if claimed with at least",
+    sprintf("%g%%", input$pc[2]), "certainty."
+  ))})
+    
   observe(if(input$hd_min >= input$hd_max) {
     showNotification("HC lower limit must be < upper limit", type="error")
   }else{
@@ -19,6 +38,18 @@ function(input, output) {
       inputId="he", min=input$he_min, value=input$he_max, max=input$he_max)
   })
   
+  unitsexport <- function(file) {
+    data <- list(
+      "Practical certainty (lo)" = input$pc[1],
+      "Practical certainty (hi)" = input$pc[2],
+      "Units" = input$units,
+      "HC min" = input$hd_min,
+      "HC max" = input$hd_max,
+      "HE min" = input$he_min,
+      "HE max" = input$he_max)
+    write.csv(data.frame("Parameter" = names(data), "Value" = unlist(data)),
+              file=file, row.names=FALSE)
+  }
   
   # Tier 1
 
@@ -36,17 +67,6 @@ function(input, output) {
   
   # Tier 2
 
-  output$pctable <- renderTable({
-    fr<-data.frame(
-      a = c(sprintf("%g", input$pc[1]), sprintf("%g", 100-input$pc[1])),
-      b = c(sprintf("%g – %g", input$pc[1], input$pc[2]),
-            sprintf("%g – %g", 100-input$pc[2], 100-input$pc[1])),
-      c = c(sprintf("%g", input$pc[2]), sprintf("%g", 100-input$pc[2])))
-    colnames(fr) <- c("No health concern", "Uncertainty", "Health concern")
-    fr},
-    spacing="m"
-  )
-  
   observe({
     nhc = input$concern_yn == 1
     lost = if(nhc) input$pc[1] else 100 - input$pc[2]
@@ -140,6 +160,23 @@ function(input, output) {
     )
   })
 
+  t2export <- function(file) {
+    nhc = if(input$concern_yn == 1) "No health concern" else "Health concern"
+    meth = if(input$method == 1) "Probabilities first" else "Numbers first"
+    data <- list(
+      "Tentative conclusion" = nhc,
+      "Method" = meth,
+      "HC value" = input$hd,
+      "HC probability" = input$hd_pr)
+    if(input$method == 1) {
+      data["HE value"] = input$he
+    } else {
+      data["HE probability"] = input$he_pr
+    }
+    write.csv(data.frame("Tier 2" = names(data), " " = unlist(data)),
+              file=file, row.names=FALSE)
+  }
+  
   ## Tier 3
   MAXPTS = 7
   
@@ -287,7 +324,7 @@ function(input, output) {
 
     list(
       HTML("<p>With this model of the HC and HE distributions,"),
-      sprintf("P(HC < HE) %s%%", prprob),
+      span(sprintf("P(HC < HE) %s%%", prprob), style="white-space:nowrap"),
 
       if(prob <= input$pc[1] || prob >= input$pc[2]) {
         nhc = (prob <= input$pc[1])
@@ -327,12 +364,36 @@ function(input, output) {
             legend.key.size = unit(1.1, 'cm'),
             legend.text = element_text(size=12)) +
       ggtitle("Uncertainty in High Exposure and the Human Concentration")
-    
   })
 
-  # Export
-  # exportera T2:  
-  # exportera T3: 
+  t3export <- function(file) {
+    writeLines("Tier 3", file)
+    writeLines(paste("HC distribution", input$hd_dist, sep=","), file)
+    write.csv(h_vals$hd(), file=file, row.names=FALSE)
+    writeLines(paste("HE distribution", input$he_dist, sep=","), file)
+    write.csv(h_vals$he(), file=file, row.names=FALSE)
+    p <- tryCatch(sprintf("%.4g", t3compute()), error=\(e) { NA } )
+    writeLines(paste("P(HC < HE)", p, sep=","), file)
+  }
   
+  # Export
+  fileexport <- function(file) {
+    writeLines(paste("# Exported at", Sys.time()), file)
+    unitsexport(file)
+    writeLines("", file)
+    t2export(file)
+    writeLines("", file)
+    t3export(file)
+  }
+  
+  output$download <- downloadHandler(
+    filename = format(Sys.time(), "uncertainty-%Y-%m-%d_%H%M.csv"),
+    content = function(file) {
+      fc = file(file, open = "w")
+      fileexport(fc)
+      close(fc)
+    },
+    contentType = "text/csv")
+
 }
 

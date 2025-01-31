@@ -25,7 +25,8 @@ fluidPage(
         sliderInput(
           "pc", label = h3("Practical certainty"), min = 0, max = 100, 
           value = c(10, 80), post="%"),
-        tableOutput("pctable")
+        tableOutput("pctable"),
+        htmlOutput("pctext")
       )
     ),
     
@@ -37,7 +38,7 @@ fluidPage(
           "units", label = "Units of measurement", value = "µM"),
         splitLayout(
           numericInput(
-            "hd_min", label = "Human Dose low limit", min = 1,
+            "hd_min", label = "Human Concentration low limit", min = 1,
             max = 100000, step = 10, value = 20),
           numericInput(
             "hd_max", label = "high limit", min = 10,
@@ -174,6 +175,8 @@ fluidPage(
 
     tabPanel(
       "Export",
+      helpText("Export all your numbers in a one CSV file"),
+      downloadButton("download", "Download CSV")
     )
     
   )
