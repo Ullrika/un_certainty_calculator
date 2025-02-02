@@ -71,7 +71,7 @@ function(input, output) {
     HTML(paste("<p style='margin-top: 1em'>If the experts are at least",
     sprintf("%d%% certain of this,", 100 - input$pc[1]),
     "we have obtained practical certainty that the compound is considered",
-    "not to be a health concern. If not, proceed to tier 2."))
+    "not to be a health concern. If not, proceed to Tier 2."))
   ))
   
   # Tier 2

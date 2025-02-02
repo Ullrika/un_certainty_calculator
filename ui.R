@@ -79,7 +79,7 @@ fluidPage(
             selected = 1),
           
           htmlOutput("hd_p_text"),
-          sliderInput("hd_p_pr", "prob", 
+          sliderInput("hd_p_pr", "probability for HC", 
                       min = 1, max = 25, value = 5, post="%"),
           htmlOutput("hd_n_text"),
           sliderInput("hd", "Point of Departure for HC: y µM",
