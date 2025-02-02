@@ -36,20 +36,22 @@ fluidPage(
       verticalLayout(
         textInput(
           "units", label = "Units of measurement", value = "µM"),
+        HTML("<label class='control-label'>Human Concentration limits</label>"),
         splitLayout(
           numericInput(
-            "hd_min", label = "Human Concentration: lowest plausible limit", min = 1,
+            "hd_min", label = "lowest plausible", min = 1,
             max = 100000, step = 10, value = 20),
           numericInput(
-            "hd_max", label = "highest plausible limit", min = 10,
+            "hd_max", label = "highest plausible", min = 10,
             max = 1000000, step = 10, value = 200)
         ),
+        HTML("<label class='control-label'>High Exposure limits</label>"),
         splitLayout(
           numericInput(
-            "he_min", label = "High Exposure: lowest plausible limit", min = 1,
+            "he_min", label = "lowest plausible", min = 1,
             max = 100000, step = 10, value = 10),
           numericInput(
-            "he_max", label = "highest plausible limit", min = 10,
+            "he_max", label = "highest plausible", min = 10,
             max = 1000000, step = 10, value = 130)
         )
       )
