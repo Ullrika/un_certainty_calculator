@@ -38,18 +38,18 @@ fluidPage(
           "units", label = "Units of measurement", value = "µM"),
         splitLayout(
           numericInput(
-            "hd_min", label = "Human Concentration low limit", min = 1,
+            "hd_min", label = "Human Concentration: lowest plausible limit", min = 1,
             max = 100000, step = 10, value = 20),
           numericInput(
-            "hd_max", label = "high limit", min = 10,
+            "hd_max", label = "highest plausible limit", min = 10,
             max = 1000000, step = 10, value = 200)
         ),
         splitLayout(
           numericInput(
-            "he_min", label = "High Exposure low limit", min = 1,
+            "he_min", label = "High Exposure: lowest plausible limit", min = 1,
             max = 100000, step = 10, value = 10),
           numericInput(
-            "he_max", label = "high limit", min = 10,
+            "he_max", label = "highest plausible limit", min = 10,
             max = 1000000, step = 10, value = 130)
         )
       )
@@ -76,16 +76,19 @@ fluidPage(
             choices = list("Probabilities first" = 1, "Numbers first" = 2),
             selected = 1),
           
-          htmlOutput("hd_text"),
-          sliderInput("hd", "Point of departure (y)",
-                      min = 1, max = 200, value = 10),
-          sliderInput("hd_pr", "P(HC < y)",
+          htmlOutput("hd_p_text"),
+          sliderInput("hd_p_pr", "prob", 
                       min = 1, max = 25, value = 5, post="%"),
-
+          htmlOutput("hd_n_text"),
+          sliderInput("hd", "Point of Departure for HC: y µM",
+                      min = 1, max = 200, value = 10),
+          htmlOutput("hd_pr_text_pos2"), # a different position when numbers first
+          sliderInput("hd_pr", "P(HC < y)", 
+                      min = 1, max = 25, value = 5, post="%"),
           htmlOutput("he_text"),
           sliderInput("he_pr", "P(HE > x)",
                       min = 1, max = 50, value = 5, post="%"),
-          sliderInput("he", "High Exposure",
+          sliderInput("he", "High Exposure: x µM",
                       min = 1, max = 200, value = 100)
         ),
         
@@ -104,8 +107,8 @@ fluidPage(
         sidebarPanel(
           width = 5,
 
-          p(paste("Elicit expert information about the expected",
-               "Human Concentration distribution:")),
+          p(paste("Make judgement about uncertainty in the ",
+               "target Human Concentration by adjusting or providing more quantiles:")),
           splitLayout(
             selectInput(
               "hd_dist", label = "HC distribution",
@@ -113,9 +116,9 @@ fluidPage(
                              "Skew-normal"="skewnormal"),
               selected = "lognormal"),
             selectInput(
-              "hd_points", label = "Number of points",
+              "hd_points", label = "Number of quantiles",
               choices = setNames(
-                2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
+                2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d quantiles", x)})),
               selected = 3)
           ),
 
@@ -133,8 +136,8 @@ fluidPage(
           }),
           htmlOutput("hd_error"),
 
-          p(paste("Elicit expert information about the expected",
-                  "High Exposure distribution:")),
+          p(paste("Make judgement about a ",
+                  "High Exposure in the target population by adjusting or providing more quantiles:")),
           
           splitLayout(
             selectInput(
@@ -143,9 +146,9 @@ fluidPage(
                              "Skew-normal"="skewnormal"),
               selected = "lognormal"),
             selectInput(
-              "he_points", label = "Number of points",
+              "he_points", label = "Number of quantiles",
               choices = setNames(
-                2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d points", x)})),
+                2:MAXPTS, lapply(2:MAXPTS, function(x){sprintf("%d quantiles", x)})),
               selected = 3)
           ),
 

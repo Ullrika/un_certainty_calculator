@@ -13,16 +13,16 @@ function(input, output) {
       b = c(sprintf("%g – %g", input$pc[1], input$pc[2]),
             sprintf("%g – %g", 100-input$pc[2], 100-input$pc[1])),
       c = c(sprintf("%g", input$pc[2]), sprintf("%g", 100-input$pc[2])))
-    colnames(fr) <- c("No health concern", "Uncertainty", "Health concern")
+    colnames(fr) <- c("No health concern", "Inconclusive", "Health concern")
     fr},
     spacing="m"
   )
 
   output$pctext <- renderUI({ helpText(paste(
-    "We accept that there is no health concern if that claim is made",
+    "The decision maker accepts that there is no health concern if that claim is made",
     "with at least", sprintf("%g%%", 100 - input$pc[1]), "certainty,",
     "or that there is a health concern if claimed with at least",
-    sprintf("%g%%", input$pc[2]), "certainty."
+    sprintf("%g%%", input$pc[2]), "certainty. In other cases, the assessment is inconclusive."
   ))})
     
   observe(if(input$hd_min >= input$hd_max) {
@@ -55,14 +55,13 @@ function(input, output) {
 
   output$t1text <- renderUI(list(
     withMathJax(paste(
-    "Ask the experts to agree how certain they are as a group that",
-    "\\(\\frac{HE}{HC} < 1\\)",
-    "considering all evidence and all identified (non-standard or ",
-    "standard) sources of uncertainty.")),
+    "Ask the experts to agree how certain they are as a group that a High Exposure in the target population is less than the target Human Concentration, ",
+    "\\(HE < HC\\),",
+    "considering all evidence and all identified sources of uncertainty.")),
     HTML(paste("<p style='margin-top: 1em'>If the experts are at least",
     sprintf("%d%% certain of this,", 100 - input$pc[1]),
-    "we have obtained practical certainty that the compound is not a",
-    "health concern."))
+    "we have obtained practical certainty that the compound is considered to not be a",
+    "health concern. If not, proceed to tier 2."))
   ))
   
   # Tier 2
@@ -70,23 +69,38 @@ function(input, output) {
   observe({
     nhc = input$concern_yn == 1
     lost = if(nhc) input$pc[1] else 100 - input$pc[2]
-    label = sprintf("P(HC %s %g)", (if(nhc) "<" else ">"), input$hd)
+    label = sprintf("P(HC %s %g) =", (if(nhc) "<" else ">"), input$hd) 
     updateSliderInput(inputId = "hd_pr", max = lost - 1, label = label)
+    updateSliderInput(inputId = "hd_p_pr", max = lost - 1)
   })
 
   observe({
     nhc = input$concern_yn == 1
-    label = sprintf("P(HE %s %g)", (if(nhc) ">" else "<"), input$hd)
+    label = sprintf("P(HE %s %g) =", (if(nhc) ">" else "<"), input$hd)
     updateSliderInput(inputId="he_pr", label = label)
   })
 
   observe({
     if(input$method == 1) {
+      shinyjs::show("hd_p_text")
+      shinyjs::show("hd_p_pr")
+      shinyjs::show("hd_n_text")
+      shinyjs::show("hd")
+      shinyjs::hide("hd_pr_text_pos2")
+      shinyjs::hide("hd_pr") 
+      shinyjs::show("he_text")
       shinyjs::hide("he_pr")
       shinyjs::show("he")
     }else{
-      shinyjs::hide("he")
+      shinyjs::hide("hd_p_text")
+      shinyjs::hide("hd_p_pr")
+      shinyjs::show("hd_n_text") 
+      shinyjs::show("hd")
+      shinyjs::show("hd_pr_text_pos2") 
+      shinyjs::show("hd_pr") 
+      shinyjs::show("he_text")
       shinyjs::show("he_pr")
+      shinyjs::hide("he")
     }
   })
   
@@ -95,24 +109,48 @@ function(input, output) {
     lost = if(nhc) input$pc[1] else 100 - input$pc[2]
     # est = if(nhc) "conservative" else "best-case"
     hdsgn = if(nhc) "<" else ">"
-    output$hd_text <- renderText({ sprintf(paste(
-      "Elicit a number for the Human Concentration as a quantile",
-      "<i>y</i> and the associated probability ",
-      "<span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>).</span><p>"),
-      hdsgn)})
+    hesgn = if(nhc) ">" else "<"
+    updateSliderInput(inputId="hd_pr", value=input$hd_p_pr)
+    updateSliderInput(inputId="he_pr", value=lost-input$hd_p_pr)
+    he_pr = lost - input$hd_p_pr
+    
+
+    output$hd_p_text <- renderText({ sprintf(paste(
+      "(1) Divide the lost probability into the probability for 
+      the target Human Concentration",
+      #"<span style='white-space:nowrap'>%g%%</span><p>",
+      "<span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>) = %g%%,</span><p>", 
+      "and the probability for the High Exposure <span style='white-space:nowrap'>",
+      "<i>P</i>(HE %s <i>x</i>) = %g%%.</span><p>"),
+      hdsgn, input$hd_pr, hesgn, input$he_pr)})
+    output$hd_n_text <- renderText({ sprintf(paste(
+      "(2) Make a judgement of the number <i>y</i> that divides
+      uncertainty about the target Human Concentration into two parts",
+      "where the probability of the part that is lower than <i>y</i>
+      is <span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>) = %g%%.</span><p>"),
+      hdsgn, input$hd_pr)})
     if(input$method == 1) {
       he_pr = lost - input$hd_pr
-      hesgn = if(nhc) ">" else "<"
-      output$he_text <- renderText({ sprintf(paste(
-        "Elicit a number for the High Exposure as the quantile",
-        "<i>x</i> such that <span style='white-space:nowrap'>",
+        output$he_text <- renderText({ sprintf(paste(
+        "(3) Make a judgement of the number <i>x</i> that divides 
+        uncertainty about a High Exposure in the target population into two parts",
+        "where the probability of the part that is higher 
+        than <i>x</i> is <span style='white-space:nowrap'>",
         "<i>P</i>(HE %s <i>x</i>) = %g%%.</span><p>"),
         hesgn, he_pr)})
     } else {
       updateSliderInput(inputId="he", value=input$hd)
       sgn = if(nhc) "above" else "below"
+      output$hd_n_text <- renderText({ sprintf(paste(
+        "(1) Provide a Point of Departure ", "<i>y</i> in %s", "for the target Human Concentration"),input$units)})
+      output$hd_pr_text_pos2 <- renderText({ sprintf(paste(
+        "(2) Make a judgement expressed as a probability that the target Human Concentration
+        is below the chosen Point of Departure (y)."))})
+        #"<span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>) = %g%%,</span><p>"), 
+        #hdsgn, input$hd_pr)})
       output$he_text <- renderText({ sprintf(paste(
-        "Ask the experts to judge their probability that the High Exposure is",
+        "(3) Make a judgement expressed as a probability that 
+        a High Exposure in the target population is",
         "%s <i>x</i> = %g %s.<p>"),
         sgn, input$hd, input$units)})
     }
@@ -131,7 +169,7 @@ function(input, output) {
             "<p>Practical certainty is obtained if \\(\\frac{y}{x} %s 1\\).",
             {if(nhc) ">" else "<"}),
           sprintf(
-            "<p>With these numbers, the ratio is \\(\\frac{%g}{%g} = %.2f\\).",
+            "<p>With the number provided, the ratio is \\(\\frac{%g}{%g} = %.2f\\).",
             input$hd, input$he, ratio)
         )))
       } else {
@@ -154,7 +192,7 @@ function(input, output) {
         {if(nhc) "is not" else "is"}
       ) else sprintf(paste(
         "Practical certainty is not reached. The assessment is inconclusive.",
-        "Proceed with a refined approach to determine if the compound %s ",
+        "Proceed with a more refined approach (Tier 3) to determine if the compound %s ",
         "a health concern."),
         {if(nhc) "is not" else "is"})
     )
@@ -313,32 +351,48 @@ function(input, output) {
   output$t3text <- renderUI({
     if(!is.null(h_error[["hd"]]) || !is.null(h_error[["he"]]))
       return(NULL)
-    prob <- t3compute() * 100
+    prob <- 100 - t3compute() * 100 #it is now P(HE < HC)
     if(prob < 1) {
       prprob <- "< 1"
     } else if(prob > 99) {
       prprob <- "> 99"
     } else {
-      prprob <- sprintf("≈ %d", round(prob))
+      prprob <- sprintf("≈ %d", round(prob))  
     }
 
     list(
-      HTML("<p>With this model of the HC and HE distributions,"),
-      span(sprintf("P(HC < HE) %s%%", prprob), style="white-space:nowrap"),
-
-      if(prob <= input$pc[1] || prob >= input$pc[2]) {
-        nhc = (prob <= input$pc[1])
-        probx = if(nhc) 100 - prob else prob
-        HTML(sprintf(paste(
-          "<p>Practical certainty is reached. The experts are at least %.0f%%",
-          "certain that the compound %s a health concern."),
-          {floor(probx * 1) / 1},
-          {if(nhc) "is not" else "is"} ))
-      } else {
+      HTML("<p>With these distributions to express uncertainty about the 
+           target Human Concentration and a High Exposure in the target population, the
+           calculated probability that HE is less than HC is"),
+      span(sprintf("P(HE < HC) %s%%", prprob), style="white-space:nowrap"),
+      #span(sprintf("P(HC < HE) %s%%", prprob), style="white-space:nowrap"),
+      
+      # if(prob <= input$pc[1] || prob >= input$pc[2]) {
+      #   nhc = (prob <= input$pc[1])
+      #   probx = if(nhc) 100 - prob else prob
+      #   HTML(sprintf(paste(
+      #     "<p>Practical certainty is reached. The experts are at least %.0f%%",
+      #     "certain that the compound %s a health concern."),
+      #     {floor(probx * 1) / 1},
+      #     {if(nhc) "is not" else "is"} ))
+      if(prob >= (100-input$pc[1])) { #no health concern - I have reversed the prob above
+          HTML(sprintf(paste(
+            "<p>Practical certainty is reached. The experts are at least %.0f%%",
+            "certain that the compound is not a health concern."),
+            {floor(prob * 1) / 1}))
+        } else if (prob <= (100-input$pc[2])) {
+          probx = 100 - prob
+          HTML(sprintf(paste(
+            "<p>Practical certainty is reached. The experts are at least %.0f%%",
+            "certain that the compound is a health concern."),
+            {floor(probx * 1) / 1}))
+        } else {
         HTML(paste(
-        "<p>Practical certainty is not reached. The assessment is inconclusive.",
-        "Proceed with a refined approach to determine if the compound is",
-        "a health concern."))
+        "<p>Practical certainty is not reached. The assessment is inconclusive. 
+        Consider reducing uncertainty. 
+        Peform a sensitivity analysis to identify the most influential 
+        sources of uncertainty, and use the result to guide how to reduce uncertainty, 
+        e.g. by producing more data, revisiting assumptions or re-evaluate conservative assessment choices."))
       }
     )
   })
