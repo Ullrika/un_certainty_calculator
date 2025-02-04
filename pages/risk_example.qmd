@@ -4,6 +4,7 @@ subtitle: "Demonstration of a tiered approach to refine the  characterisation of
 author: "Ullrika Sahlin and Dawei Tang"
 format: 
   html:
+    embed-resources: true
     toc: true
     echo: false
     message: false
