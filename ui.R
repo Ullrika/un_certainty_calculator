@@ -24,7 +24,7 @@ fluidPage(
       verticalLayout(
         sliderInput(
           "pc", label = h3("Practical certainty"), min = 0, max = 100, 
-          value = c(10, 80), post="%"),
+          value = c(30, 70), post="%"),
         tableOutput("pctable"),
         htmlOutput("pctext")
       )
