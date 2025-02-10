@@ -33,13 +33,13 @@ function(input, output) {
       inputId="hd", min=input$hd_min, value=input$hd_min, max=input$hd_max,
       step=10**(floor(log10(input$hd_max - input$hd_min) - 1.5)) )
   })
-
+  
   observe(if(input$he_min >= input$he_max) {
     showNotification("HE lower limit must be < upper limit", type="error")
   }else{
     updateSliderInput(
       inputId="he", min=input$he_min, value=input$he_max, max=input$he_max,
-      step=10**(floor(log10(input$he_max - input$he0_min) - 1.5)) )
+      step=10**(floor(log10(input$he_max - input$he_min) - 1.5)) )
   })
   
   observe({
