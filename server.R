@@ -30,7 +30,7 @@ function(input, output) {
     showNotification("HC lower limit must be < upper limit", type="error")
   }else{
     updateSliderInput(
-      inputId="hd", min=input$hd_min, value=input$hd_min, max=input$hd_max,
+      inputId="hd", min=input$hd_min, max=input$hd_max, # value=input$hd_min,
       step=10**(floor(log10(input$hd_max - input$hd_min) - 1.5)) )
   })
   
@@ -38,7 +38,7 @@ function(input, output) {
     showNotification("HE lower limit must be < upper limit", type="error")
   }else{
     updateSliderInput(
-      inputId="he", min=input$he_min, value=input$he_max, max=input$he_max,
+      inputId="he", min=input$he_min, max=input$he_max, # value=input$he_max,
       step=10**(floor(log10(input$he_max - input$he_min) - 1.5)) )
   })
   
@@ -256,15 +256,17 @@ function(input, output) {
         hmin <- input[[paste0(h, "_min")]]
         lapply(1:MAXPTS, \(x) { updateNumericInput(
           inputId=sprintf("%s_%d", h, x), min=hmin)})
-        updateNumericInput(inputId=sprintf("%s_p%d", h, 1), value=1)
-        updateNumericInput(inputId=sprintf("%s_%d", h, 1), value=hmin)
+        # Uncomment to overwrite the first row when hx_min is changed
+        # updateNumericInput(inputId=sprintf("%s_p%d", h, 1), value=1)
+        # updateNumericInput(inputId=sprintf("%s_%d", h, 1), value=hmin)
       })
       observe({
         hmax <- input[[paste0(h, "_max")]]
         lapply(1:MAXPTS, \(x) { updateNumericInput(
           inputId=sprintf("%s_%d", h, x), max=hmax)})
-        updateNumericInput(inputId=sprintf("%s_p%d", h, MAXPTS), value=99)
-        updateNumericInput(inputId=sprintf("%s_%d", h, MAXPTS), value=hmax)
+        # Uncomment to overwrite the last row when hx_max is changed
+        # updateNumericInput(inputId=sprintf("%s_p%d", h, MAXPTS), value=99)
+        # updateNumericInput(inputId=sprintf("%s_%d", h, MAXPTS), value=hmax)
       })
       
       # Collect current hx into dataframe

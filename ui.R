@@ -3,6 +3,10 @@ library(DT)
 
 MAXPTS <- 7
 initprobs <- c(1, 5, 20, 50, 80, 95, 99)
+hdrange <- c(.01, 100)
+inithd <- c(10, 20, 25, 32, 50, 70, 90)
+herange <- c(.01, 40)
+inithe <- c(5, 8, 12, 15, 20, 27, 35)
 
 fluidPage(
   useShinyjs(),
@@ -40,19 +44,19 @@ fluidPage(
         splitLayout(
           numericInput(
             "hd_min", label = "lowest plausible", min = 0,
-            max = 100000, step = 1, value = 0.01),
+            max = 100000, step = 1, value = hdrange[1]),
           numericInput(
             "hd_max", label = "highest plausible", min = 0,
-            max = 1000000, step = 1, value = 100)
+            max = 1000000, step = 1, value = hdrange[2])
         ),
         HTML("<label class='control-label'>High Exposure limits</label>"),
         splitLayout(
           numericInput(
             "he_min", label = "lowest plausible", min = 0,
-            max = 100000, step = 1, value = 0.01),
+            max = 100000, step = 1, value = herange[1]),
           numericInput(
             "he_max", label = "highest plausible", min = 0,
-            max = 1000000, step = 1, value = 40)
+            max = 1000000, step = 1, value = herange[2])
         )
       )
     ),
@@ -83,7 +87,8 @@ fluidPage(
                       min = 1, max = 25, value = 5, post="%"),
           htmlOutput("hd_n_text"),
           sliderInput("hd", "Point of Departure for HC: y µM",
-                      min = 1, max = 200, value = 32, step=.01),
+                      min = hdrange[1], max = hdrange[2],
+                      value = inithd[4], step = 1),
           htmlOutput("hd_pr_text_pos2"), # a different position when numbers first
           sliderInput("hd_pr", "P(HC < y)", 
                       min = 1, max = 25, value = 5, post="%"),
@@ -91,7 +96,8 @@ fluidPage(
           sliderInput("he_pr", "P(HE > x)",
                       min = 1, max = 50, value = 5, post="%"),
           sliderInput("he", "High Exposure: x µM",
-                      min = 1, max = 200, value = 1, step=.01)
+                      min = herange[1], max = herange[2],
+                      value = inithe[4], step = 1)
         ),
         
         # Show a plot of the generated distribution
@@ -132,8 +138,8 @@ fluidPage(
                            min=1, max=99, step=1,
                            value=initprobs[x]),
               numericInput(sprintf("hd_%d", x), label=labs[2],
-                           min=20, max=200, step=1,
-                           value=round(20 + (x - 1) * 180 / (MAXPTS - 1))),
+                           min=hdrange[1], max=hdrange[2], step=1,
+                           value=inithd[[x]] ),
               class=if(x < MAXPTS) "unctight" else "")
           }),
           htmlOutput("hd_error"),
@@ -162,8 +168,8 @@ fluidPage(
                            min=1, max=99, step=1,
                            value=initprobs[x]),
               numericInput(sprintf("he_%d", x), label=labs[2],
-                           min=10, max=130, step=1,
-                           value=round(10 + (x - 1) * 120 / (MAXPTS - 1))),
+                           min=herange[1], max=herange[2], step=1,
+                           value=inithe[[x]]),
               class="unctight")
           }),
           htmlOutput("he_error")
