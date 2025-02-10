@@ -130,7 +130,7 @@ function(input, output) {
       "the target Human Concentration",
       #"<span style='white-space:nowrap'>%g%%</span><p>",
       "<span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>) = %g%%,",
-      "</span><p>and the probability for the High Exposure ",
+      "</span>and the probability for the High Exposure ",
       "<span style='white-space:nowrap'>",
       "<i>P</i>(HE %s <i>x</i>) = %g%%.</span>"),
       hdsgn, input$hd_pr, hesgn, input$he_pr)})

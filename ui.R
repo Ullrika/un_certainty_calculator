@@ -24,7 +24,7 @@ fluidPage(
       verticalLayout(
         sliderInput(
           "pc", label = h3("Practical certainty"), min = 0, max = 100, 
-          value = c(30, 70), post="%"),
+          value = c(10, 90), post="%"),
         tableOutput("pctable"),
         htmlOutput("pctext")
       )
@@ -39,20 +39,20 @@ fluidPage(
         HTML("<label class='control-label'>Human Concentration limits</label>"),
         splitLayout(
           numericInput(
-            "hd_min", label = "lowest plausible", min = 1,
-            max = 100000, step = 10, value = 20),
+            "hd_min", label = "lowest plausible", min = 0,
+            max = 100000, step = 1, value = 0.01),
           numericInput(
-            "hd_max", label = "highest plausible", min = 10,
-            max = 1000000, step = 10, value = 200)
+            "hd_max", label = "highest plausible", min = 0,
+            max = 1000000, step = 1, value = 100)
         ),
         HTML("<label class='control-label'>High Exposure limits</label>"),
         splitLayout(
           numericInput(
-            "he_min", label = "lowest plausible", min = 1,
-            max = 100000, step = 10, value = 10),
+            "he_min", label = "lowest plausible", min = 0,
+            max = 100000, step = 1, value = 0.01),
           numericInput(
-            "he_max", label = "highest plausible", min = 10,
-            max = 1000000, step = 10, value = 130)
+            "he_max", label = "highest plausible", min = 0,
+            max = 1000000, step = 1, value = 40)
         )
       )
     ),
@@ -79,11 +79,11 @@ fluidPage(
             selected = 1),
           
           htmlOutput("hd_p_text"),
-          sliderInput("hd_p_pr", "probability for HC", 
+          sliderInput("hd_p_pr", "Probability for HC", 
                       min = 1, max = 25, value = 5, post="%"),
           htmlOutput("hd_n_text"),
           sliderInput("hd", "Point of Departure for HC: y µM",
-                      min = 1, max = 200, value = 10),
+                      min = 1, max = 200, value = 32),
           htmlOutput("hd_pr_text_pos2"), # a different position when numbers first
           sliderInput("hd_pr", "P(HC < y)", 
                       min = 1, max = 25, value = 5, post="%"),
@@ -91,7 +91,7 @@ fluidPage(
           sliderInput("he_pr", "P(HE > x)",
                       min = 1, max = 50, value = 5, post="%"),
           sliderInput("he", "High Exposure: x µM",
-                      min = 1, max = 200, value = 100)
+                      min = 1, max = 200, value = 1, step=.1)
         ),
         
         # Show a plot of the generated distribution
