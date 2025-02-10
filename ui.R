@@ -83,7 +83,7 @@ fluidPage(
                       min = 1, max = 25, value = 5, post="%"),
           htmlOutput("hd_n_text"),
           sliderInput("hd", "Point of Departure for HC: y µM",
-                      min = 1, max = 200, value = 32),
+                      min = 1, max = 200, value = 32, step=.01),
           htmlOutput("hd_pr_text_pos2"), # a different position when numbers first
           sliderInput("hd_pr", "P(HC < y)", 
                       min = 1, max = 25, value = 5, post="%"),
@@ -91,7 +91,7 @@ fluidPage(
           sliderInput("he_pr", "P(HE > x)",
                       min = 1, max = 50, value = 5, post="%"),
           sliderInput("he", "High Exposure: x µM",
-                      min = 1, max = 200, value = 1, step=.1)
+                      min = 1, max = 200, value = 1, step=.01)
         ),
         
         # Show a plot of the generated distribution
