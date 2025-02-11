@@ -71,38 +71,50 @@ fluidPage(
       
       sidebarLayout(
         sidebarPanel(
-          width = 5,
+          width = 6,
           radioButtons(
             "concern_yn", label = "Tentative conclusion",
             choices = list("No health concern" = 1, "Health concern" = 2),
             selected = 1),
 
-          radioButtons(
-            "method", label = "Method",
-            choices = list("Probabilities first" = 1, "Numbers first" = 2),
-            selected = 1),
+          splitLayout(
+            radioButtons(
+              "method", label = "Method",
+              choices = list("Probabilities first" = 1, "Numbers first" = 2),
+              selected = 1),
+            
+            radioButtons(
+              "order", label = "Order",
+              choices = list("HC first" = 1, "Exposure first" = 2),
+              selected = 1),
+          ),
           
-          htmlOutput("hd_p_text"),
-          sliderInput("hd_p_pr", "Probability for HC", 
-                      min = 1, max = 25, value = 5, post="%"),
-          htmlOutput("hd_n_text"),
-          sliderInput("hd", "Point of Departure for HC: y µM",
-                      min = hdrange[1], max = hdrange[2],
-                      value = inithd[4], step = 1),
-          htmlOutput("hd_pr_text_pos2"), # a different position when numbers first
-          sliderInput("hd_pr", "P(HC < y)", 
-                      min = 1, max = 25, value = 5, post="%"),
-          htmlOutput("he_text"),
-          sliderInput("he_pr", "P(HE > x)",
-                      min = 1, max = 50, value = 5, post="%"),
-          sliderInput("he", "High Exposure: x µM",
-                      min = herange[1], max = herange[2],
-                      value = inithe[4], step = 1)
+          div(id="flexy", style="display: flex; flex-direction: column;",
+              div(id="hd_div", style="order: 1",
+                  htmlOutput("hd_text"),
+                  sliderInput("hd", "Point of Departure for HC: y µM",
+                              min = hdrange[1], max = hdrange[2],
+                              value = inithd[4], step = 1)),
+              
+              div(id="hd_pr_div", style="order: 2",
+                  htmlOutput("hd_pr_text"),
+                  sliderInput("hd_pr", "P(HC < y)",
+                              min = 0, max = 50, value = 5, post="%")),
+              div(id="he_pr_div", style="order: 3",
+                  htmlOutput("he_pr_text", style="order: 3"),
+                  sliderInput("he_pr", "P(HE > x)",
+                              min = 0, max = 50, value = 5, post="%")),
+              div(id="he_div", style="order: 4",
+                  htmlOutput("he_text"),
+                  sliderInput("he", "High Exposure: x µM",
+                              min = herange[1], max = herange[2],
+                              value = inithe[4], step = 1))
+          ),
         ),
         
         # Show a plot of the generated distribution
         mainPanel(
-          width = 7,
+          width = 6,
           uiOutput("t2results")
         )
       )
