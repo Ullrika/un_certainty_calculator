@@ -23,6 +23,10 @@ fluidPage(
     "Menu",
     widths = c(2, 10),
     tabPanel(
+      "Start",
+      p("Welcome to the (un)certainty calculator. Copyright Ullrika Sahlin, Lund University.")
+    ),
+    tabPanel(
       "Practical certainty",
       
       verticalLayout(
