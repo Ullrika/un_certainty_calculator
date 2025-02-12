@@ -1,3 +1,3 @@
-# un_certainty_calculator
+# The \(un\)certainty calculator
 
-runGitHub( "un_certainty_calculator", "ullrika")
+[Run the \(un\)certainty calculator online](https://ctroein.shinyapps.io/un_certainty_calculator/)
