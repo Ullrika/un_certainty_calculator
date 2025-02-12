@@ -24,7 +24,16 @@ fluidPage(
     widths = c(2, 10),
     tabPanel(
       "Start",
-      p("Welcome to the (un)certainty calculator. Copyright Ullrika Sahlin, Lund University.")
+      p("Welcome to the (un)certainty calculator."),
+      p("Copyright Ullrika Sahlin, Lund University."),
+      p("This calculator is developed to support elicitation and combination of uncertainty in hazard and exposure of a human health assessment."),
+      p("1) Set thresholds for practical certainty (from the decision maker)."),
+      p("2) Set unit and possible ranges for the two quantities of interest."),
+      p("3) Start with tier 1. If not conclusive, move on to tier 2."),
+      p("4) In tier 2, choose potential outcome and the order to put in judgements"),
+      p("5) Fill in judgement from the group of experts and explore the results from calculations."),
+      p("6) If not conclusive, move to tier 3"),
+      p("7) Fill in more judgements, and select probability distribution, and explore the results from calculations.")
     ),
     tabPanel(
       "Practical certainty",
