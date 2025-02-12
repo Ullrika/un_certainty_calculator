@@ -1,5 +1,5 @@
 library(shinyjs)
-library(DT)
+#library(DT)
 
 MAXPTS <- 7
 initprobs <- c(1, 5, 20, 50, 80, 95, 99)
@@ -30,9 +30,9 @@ fluidPage(
       p("1) Set thresholds for practical certainty (from the decision maker)."),
       p("2) Set unit and possible ranges for the two quantities of interest."),
       p("3) Start with tier 1. If not conclusive, move on to tier 2."),
-      p("4) In tier 2, choose potential outcome and the order to put in judgements"),
+      p("4) In tier 2, choose potential outcome and the order to put in judgements,"),
       p("5) Fill in judgement from the group of experts and explore the results from calculations."),
-      p("6) If not conclusive, move to tier 3"),
+      p("6) If not conclusive, move to tier 3."),
       p("7) Fill in more judgements, and select probability distribution, and explore the results from calculations.")
     ),
     tabPanel(
