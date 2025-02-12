@@ -245,15 +245,31 @@ function(input, output) {
   t2export <- function(file) {
     nhc = if(input$concern_yn == 1) "No health concern" else "Health concern"
     meth = if(input$method == 1) "Probabilities first" else "Numbers first"
+    ord = if(input$order == 1) "HC first" else "HE first"
     data <- list(
       "Tentative conclusion" = nhc,
       "Method" = meth,
-      "HC value" = input$hd,
-      "HC probability" = input$hd_pr)
+      "Order" = ord)
     if(input$method == 1) {
-      data["HE value"] = input$he
+      if(input$order == 1) {
+        data["HC probability"] = input$hd_pr
+        data["HC value"] = input$hd
+        data["HE value"] = input$he
+      } else {
+        data["HE probability"] = input$he_pr
+        data["HE value"] = input$he
+        data["HC value"] = input$hd
+      }
     } else {
-      data["HE probability"] = input$he_pr
+      if(input$order == 1) {
+        data["HC value"] = input$hd
+        data["HC probability"] = input$hd_pr
+        data["HE probability"] = input$he_pr
+      } else {
+        data["HE value"] = input$he
+        data["HE probability"] = input$he_pr
+        data["HC probability"] = input$hd_pr
+      }
     }
     write.csv(data.frame("Tier 2" = names(data), " " = unlist(data)),
               file=file, row.names=FALSE)
@@ -469,12 +485,12 @@ function(input, output) {
 
   t3export <- function(file) {
     writeLines("Tier 3", file)
-    writeLines(paste("HC distribution", input$hd_dist, sep=","), file)
+    writeLines(paste('"HC distribution"', input$hd_dist, sep=","), file)
     write.csv(h_vals$hd(), file=file, row.names=FALSE)
-    writeLines(paste("HE distribution", input$he_dist, sep=","), file)
+    writeLines(paste('"HE distribution"', input$he_dist, sep=","), file)
     write.csv(h_vals$he(), file=file, row.names=FALSE)
     p <- tryCatch(sprintf("%.4g", t3compute()), error=\(e) { NA } )
-    writeLines(paste("P(HC < HE)", p, sep=","), file)
+    writeLines(paste('"P(HC < HE)"', p, sep=","), file)
   }
   
   # Export
