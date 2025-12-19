@@ -347,9 +347,9 @@ $$P( HE > x) = `r p_HE`\%$$
 Practical certainty is obtained if $$100 - \min(100, P(HE > x) + P(HD < y)) \geq `r 100*pc_no`$$ In this example, the left hand side is $100-min(100, `r p_HE`+`r p_HD`)= `r 100-min(100,p_HE + p_HD)`$.
 
 
-#::: callout-note
-#Note that probabilities cannot be negative. Here, the negative value is a result from using a simplified probabilistic where probabilities are added up.
-#:::
+<!-- ::: callout-note -->
+<!-- Note that probabilities cannot be negative. Here, the negative value is a result from using a simplified probabilistic where probabilities are added up. -->
+<!-- ::: -->
 
 Hence, practical certainty is not reached with the probability bounds analysis using numbers first.
 

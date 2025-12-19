@@ -44,9 +44,9 @@ function(input, output) {
   
   observe({
     updateSliderInput(
-      inputId="hd", label=paste("Point of Departure for HC: y ", input$units))
+      inputId="hd", label=paste("Point of Departure for HC: x ", input$units))
     updateSliderInput(
-      inputId="he", label=paste("High Exposure: x", input$units))
+      inputId="he", label=paste("High Exposure: y", input$units))
   })
   
   unitsexport <- function(file) {
@@ -62,7 +62,7 @@ function(input, output) {
               file=file, row.names=FALSE)
   }
   
-  # Tier 1
+  # Ref 1
 
   output$t1text <- renderUI(list(
     withMathJax(paste(
@@ -73,10 +73,10 @@ function(input, output) {
     HTML(paste("<p style='margin-top: 1em'>If the experts are at least",
     sprintf("%d%% certain of this,", 100 - input$pc[1]),
     "we have obtained practical certainty that the compound is considered",
-    "not to be a health concern. If not, proceed to Tier 2."))
+    "not to be a health concern. If not, proceed to Ref 2."))
   ))
   
-  # Tier 2
+  # Ref 2
 
   reorder <- function(ord, show = 3) {
     s <- lapply(seq_along(ord), \(i) { sprintf(
@@ -118,24 +118,24 @@ function(input, output) {
         output$hd_pr_text <- renderText({ sprintf(paste(
           "(1) Divide the lost probability into the probability for",
           "the target Human Concentration",
-          "<span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>) = %g%%,",
+          "<span style='white-space:nowrap'><i>P</i>(HC %s <i>x</i>) = %g%%,",
           "</span>and the probability for a High Exposure",
           "<span style='white-space:nowrap'>",
-          "<i>P</i>(HE %s <i>x</i>) = %g%%.</span>"),
+          "<i>P</i>(HE %s <i>y</i>) = %g%%.</span>"),
           hdsgn, input$hd_pr, hesgn, input$he_pr)})
         output$hd_text <- renderText({ sprintf(paste(
-          "<p>(2) Make a judgement of the number <i>y</i> that divides",
+          "<p>(2) Make a judgement of the number <i>x</i> that divides",
           "uncertainty about the target Human Concentration into two parts",
-          "where the probability of the part that is lower than <i>y</i>",
-          "is <span style='white-space:nowrap'><i>P</i>(HC %s <i>y</i>) = %g%%.",
+          "where the probability of the part that is lower than <i>x</i>",
+          "is <span style='white-space:nowrap'><i>P</i>(HC %s <i>x</i>) = %g%%.",
           "</span>"),
           hdsgn, input$hd_pr)})
         output$he_text <- renderText({ sprintf(paste(
-          "<p>(3) Make a judgement of the number <i>x</i> that divides",
+          "<p>(3) Make a judgement of the number <i>y</i> that divides",
           "uncertainty about a High Exposure in the target population into",
           "two parts where the probability of the part that is higher",
-          "than <i>x</i> is <span style='white-space:nowrap'>",
-          "<i>P</i>(HE %s <i>x</i>) = %g%%.</span>"),
+          "than <i>y</i> is <span style='white-space:nowrap'>",
+          "<i>P</i>(HE %s <i>y</i>) = %g%%.</span>"),
           hesgn, he_pr)})
       } else {
         updateSliderInput(inputId = "hd_pr",
@@ -144,14 +144,14 @@ function(input, output) {
                           label = sprintf("P(HE %s %g) =", hesgn, input$hd))
         sgn = if(nhc) "above" else "below"
         output$hd_text <- renderText({ sprintf(paste(
-          "<p>(1) Provide a Point of Departure <i>y</i> in %s",
+          "<p>(1) Provide a Point of Departure <i>x</i> in %s",
           "for the target Human Concentration"), input$units)})
         output$hd_pr_text <- renderText( paste(
           "<p>(2) Make a judgement expressed as a probability that the target",
-          "Human Concentration is below the chosen Point of Departure (y)."))
+          "Human Concentration is below the chosen Point of Departure (x)."))
         output$he_pr_text <- renderText({ sprintf(paste(
           "<p>(3) Make a judgement expressed as a probability that a",
-          "High Exposure in the target population is %s <i>x</i> = %g %s."),
+          "High Exposure in the target population is %s <i>y</i> = %g %s."),
           sgn, input$hd, input$units)})
       }
     } else {
@@ -161,16 +161,16 @@ function(input, output) {
         output$he_pr_text <- renderText({ sprintf(paste(
           "(1) Divide the lost probability into the probability for",
           "a High Exposure",
-          "<span style='white-space:nowrap'><i>P</i>(HE %s <i>x</i>) = %g%%,",
+          "<span style='white-space:nowrap'><i>P</i>(HE %s <i>y</i>) = %g%%,",
           "</span>and the probability for the target Human Concentration",
           "<span style='white-space:nowrap'>",
-          "<i>P</i>(HC %s <i>y</i>) = %g%%.</span>"),
+          "<i>P</i>(HC %s <i>x</i>) = %g%%.</span>"),
           hesgn, input$he_pr, hdsgn, input$hd_pr)})
         output$he_text <- renderText({ sprintf(paste(
           "<p>(2) Make a judgement of the number <i>y</i> that divides",
           "uncertainty about a High Exposure into two parts",
           "where the probability of the part that is lower than <i>y</i>",
-          "is <span style='white-space:nowrap'><i>P</i>(HE %s <i>x</i>) = %g%%.",
+          "is <span style='white-space:nowrap'><i>P</i>(HE %s <i>y</i>) = %g%%.",
           "</span>"),
           hesgn, input$he_pr)})
         output$hd_text <- renderText({ sprintf(paste(
@@ -178,7 +178,7 @@ function(input, output) {
           "uncertainty about the target Human Concentration",
           "into two parts where the probability of the part that is higher",
           "than <i>x</i> is <span style='white-space:nowrap'>",
-          "<i>P</i>(HC %s <i>y</i>) = %g%%.</span>"),
+          "<i>P</i>(HC %s <i>x</i>) = %g%%.</span>"),
           hdsgn, hd_pr)})
       } else {
         updateSliderInput(inputId = "hd_pr",
@@ -189,15 +189,15 @@ function(input, output) {
 #        updateSliderInput(inputId="hd", value=input$he)
         sgn = if(nhc) "above" else "below"
         output$he_text <- renderText({ sprintf(paste(
-          "<p>(1) Provide a conservative value <i>x</i> in %s",
+          "<p>(1) Provide a conservative value <i>y</i> in %s",
           "for a High Exposure in the target population"),
           input$units)})
         output$he_pr_text <- renderText( paste(
           "<p>(2) Make a judgement expressed as a probability that a",
-          "High Exposure is below x."))
+          "High Exposure is below y."))
         output$hd_pr_text <- renderText({ sprintf(paste(
           "<p>(3) Make a judgement expressed as a probability that the",
-          "target Human Concentration is %s <i>y</i> = %g %s."),
+          "target Human Concentration is %s <i>x</i> = %g %s."),
           sgn, input$he, input$units)})
       }
     }
@@ -212,7 +212,7 @@ function(input, output) {
         reached = nhc == (ratio > 1)
         lhs = if(nhc) 100 - input$pc[1] else input$pc[2]
         withMathJax(HTML(sprintf(paste(
-          "<p>Practical certainty is obtained if \\(\\frac{y}{x} %s 1\\).",
+          "<p>Practical certainty is obtained if \\(\\frac{x}{y} %s 1\\).",
           "<p>With the number provided, the ratio is",
           "\\(\\frac{%g}{%g} = %.2f\\)."),
           if(nhc) ">" else "<", input$hd, input$he, ratio)))
@@ -222,7 +222,7 @@ function(input, output) {
         reached = lhs >= notlost
         withMathJax(HTML(paste(
           "<p>Practical certainty is obtained if ",
-          sprintf("\\(100 - \\min(100, P(HC %s y) + P(HE %s x)) \\geq %g\\).",
+          sprintf("\\(100 - \\min(100, P(HC %s x) + P(HE %s y)) \\geq %g\\).",
                   {if(nhc) "<" else ">"}, {if(nhc) ">" else "<"}, notlost),
           "<p>With these numbers, the left hand side is ",
           sprintf("\\(100 - \\min(100, %g + %g) = %g\\).",
@@ -236,7 +236,7 @@ function(input, output) {
         {if(nhc) "is not" else "is"}
       ) else sprintf(paste(
         "Practical certainty is not reached. The assessment is inconclusive.",
-        "Proceed with a more refined approach (Tier 3) to determine if",
+        "Proceed with a more refined approach (Ref 3) to determine if",
         "the compound %s a health concern."),
         {if(nhc) "is not" else "is"})
     )
@@ -271,11 +271,11 @@ function(input, output) {
         data["HC probability"] = input$hd_pr
       }
     }
-    write.csv(data.frame("Tier 2" = names(data), " " = unlist(data)),
+    write.csv(data.frame("Ref 2" = names(data), " " = unlist(data)),
               file=file, row.names=FALSE)
   }
   
-  ## Tier 3
+  ## Ref 3
   MAXPTS = 7
   
   h_shown <- reactiveValues()
@@ -484,7 +484,7 @@ function(input, output) {
   })
 
   t3export <- function(file) {
-    writeLines("Tier 3", file)
+    writeLines("Ref 3", file)
     writeLines(paste('"HC distribution"', input$hd_dist, sep=","), file)
     write.csv(h_vals$hd(), file=file, row.names=FALSE)
     writeLines(paste('"HE distribution"', input$he_dist, sep=","), file)

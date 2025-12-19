@@ -29,11 +29,11 @@ fluidPage(
       p("This calculator is developed to support elicitation and combination of uncertainty in hazard and exposure of a human health assessment."),
       p("1) Set thresholds for practical certainty (from the decision maker)."),
       p("2) Set unit and possible ranges for the two quantities of interest."),
-      p("3) Start with tier 1. If not conclusive, move on to tier 2."),
-      p("4) In tier 2, choose potential outcome and the order to put in judgements,"),
+      p("3) Start with the simplest option, to express overall uncertainty directly (Ref 1). If not conclusive, move on to Ref 2."),
+      p("4) In Ref 2, you evaluate uncertainty on hazard and exposure separately and combine by probability bounds analysis. Choose potential outcome and the order to put in judgements,"),
       p("5) Fill in judgement from the group of experts and explore the results from calculations."),
-      p("6) If not conclusive, move to tier 3."),
-      p("7) Fill in more judgements, and select probability distribution, and explore the results from calculations.")
+      p("6) If not conclusive, move to Ref 3."),
+      p("7) Fill in more judgements, and select probability distribution, and explore the results from probabilistic calculations.")
     ),
     tabPanel(
       "Practical certainty",
@@ -75,12 +75,12 @@ fluidPage(
     ),
     
     tabPanel(
-      "Tier 1",
+      "Ref 1",
       htmlOutput("t1text")
     ),
     
     tabPanel(
-      "Tier 2",
+      "Ref 2",
       
       sidebarLayout(
         sidebarPanel(
@@ -105,21 +105,21 @@ fluidPage(
           div(id="flexy", style="display: flex; flex-direction: column;",
               div(id="hd_div", style="order: 1",
                   htmlOutput("hd_text"),
-                  sliderInput("hd", "Point of Departure for HC: y µM",
+                  sliderInput("hd", "Point of Departure for HC: x µM",
                               min = hdrange[1], max = hdrange[2],
                               value = inithd[4], step = 1)),
               
               div(id="hd_pr_div", style="order: 2",
                   htmlOutput("hd_pr_text"),
-                  sliderInput("hd_pr", "P(HC < y)",
+                  sliderInput("hd_pr", "P(HC < x)",
                               min = 0, max = 50, value = 5, post="%")),
               div(id="he_pr_div", style="order: 3",
                   htmlOutput("he_pr_text", style="order: 3"),
-                  sliderInput("he_pr", "P(HE > x)",
+                  sliderInput("he_pr", "P(HE > y)",
                               min = 0, max = 50, value = 5, post="%")),
               div(id="he_div", style="order: 4",
                   htmlOutput("he_text"),
-                  sliderInput("he", "High Exposure: x µM",
+                  sliderInput("he", "High Exposure: y µM",
                               min = herange[1], max = herange[2],
                               value = inithe[4], step = 1))
           ),
@@ -134,7 +134,7 @@ fluidPage(
     ),
 
     tabPanel(
-      "Tier 3",
+      "Ref 3",
 
       sidebarLayout(
         sidebarPanel(
