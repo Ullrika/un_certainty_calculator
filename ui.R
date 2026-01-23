@@ -24,7 +24,7 @@ fluidPage(
     widths = c(2, 10),
     tabPanel(
       "Start",
-      p("HEJ HOPP Welcome to the (un)certainty calculator."),
+      p("Welcome to the (un)certainty calculator."),
       p("Copyright Ullrika Sahlin, Lund University."),
       p("This calculator is developed to support elicitation and combination of uncertainty in hazard and exposure of a human health assessment."),
       p("1) Set thresholds for practical certainty (from the decision maker)."),
