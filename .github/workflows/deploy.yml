@@ -13,7 +13,8 @@ jobs:
           SHINY_TOKEN: ${{ secrets.SHINY_TOKEN }}
           SHINY_SECRET: ${{ secrets.SHINY_SECRET }}
         run: |
-          install.packages("rsconnect", repos = "https://cloud.r-project.org")
+          install.packages("curl", "snowflakeauth")
+          install.packages("rsconnect")
           rsconnect::setAccountInfo(
             name   = Sys.getenv("SHINY_ACC_NAME"),
             token  = Sys.getenv("SHINY_TOKEN"),
